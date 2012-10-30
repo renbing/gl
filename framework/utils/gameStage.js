@@ -56,7 +56,8 @@
 
             // 如果有拖拽行为,直接只派发给拖拽对象
             if (Event.dragObject) {
-                var offset = {x:point.x - Event.moveEvent.data.x, y:point.y - Event.moveEvent.data.y};
+                var offset = {x:point.x - Event.moveEvent.data.x, y:point.y - Event.moveEvent.data.y,
+                                ax:point.x - Event.enterEvent.data.x, ay:point.y - Event.enterEvent.data.y};
                 Event.dragObject.triggerEvent(new Event(Event.GESTURE_DRAG, offset));
             } else {
                 hitedObject && hitedObject.bubbleEvent(event);
