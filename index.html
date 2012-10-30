@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8">
+    <title>Galaxy Life Web</title>
+    <script src="framework/core/base.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/utils/matrix.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/display/Texture.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/display/FillRect.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/display/MovieClip.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/display/TextField.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/event/Event.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/media/Sound.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/media/SoundManager.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/utils/textureLoader.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/utils/configLoader.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/utils/ajax.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/utils/common.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/utils/drag.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/utils/trace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/utils/tween.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/utils/gameStage.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/utils/gameNetManager.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/utils/md5.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/utils/gameSchedule.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/utils/action.js" type="text/javascript" charset="utf-8"></script>
+    <script src="framework/roseCore.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="js/config.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/resource.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/main.js" type="text/javascript" charset="utf-8"></script>
+
+    <script type="text/javascript">
+        function setCookie(name, value, expires, path, domain, secure)
+        {
+            document.cookie = name + "=" + escape(value) +
+                ((expires) ? "; expires=" + expires : "") +
+                ((path) ? "; path=" + path : "") +
+                ((domain) ? "; domain=" + domain : "") +
+                ((secure) ? "; secure" : "");
+        }
+
+        function getCookieVal(offset)
+        {
+            var endstr = document.cookie.indexOf(";", offset);
+            if(endstr == -1)
+            {
+                endstr = document.cookie.length;
+            }
+            return unescape(document.cookie.substring(offset, endstr));
+        }
+
+        function getCookie(name)
+        {
+            var arg = name + "=";
+            var alen = arg.length;
+            var clen = document.cookie.length;
+            var i = 0;
+            while(i < clen)
+            {
+                var j = i + alen;
+                if (document.cookie.substring(i, j) == arg)
+                {
+                    return getCookieVal(j);
+                }
+                i = document.cookie.indexOf(" ", i) + 1;
+                if(i == 0) break;
+            }
+            return;
+        }
+
+        function handleUserId() {
+            var uid = document.getElementById("uid").value;
+
+            if( uid ) {
+                setCookie("uid", uid); 
+                location.reload();
+            }
+        }
+
+
+    </script>
+
+</head>
+<body style="margin:0;padding:0">
+<!--label style="margin-left:300px">更换用户:</label><input id="uid" type=text /><button type="button" onclick="javascript:handleUserId();">提交</button -->
+</body>
+</html>
