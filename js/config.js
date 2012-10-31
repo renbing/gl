@@ -14,6 +14,16 @@ global.resourceDirectory = "resources/";
 global.mediaDirectory = "resources/";
 global.isShowRect = false;
 
+global.Map = {
+    unitW : 78,
+    unitH : 72,
+    cellUnitX : 16,
+    cellUnitY : 8,
+    cellUnit : 8,
+    startX : 286+117,
+    startY : 1342-150,
+};
+
 //系统颜色定义
 global.Color = {
     WHITE : "#ffffff",
@@ -24,14 +34,3 @@ global.Color = {
     YELLOW : "#ffff00",
     PINK : "#ff00ff"
 };
-
-global.cfgs = [
-    "GameTips.cfg",
-    "achievements.cfg",
-    "credits.cfg",
-    "enemyarchetypelist.cfg",
-    "shop.cfg",
-    "storePurchase.cfg",
-    "texteffects.cfg",
-    "zones.cfg",
-];

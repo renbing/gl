@@ -28,6 +28,11 @@ function loadLoading() {
         resourceManager.add("base/base"+baseSize+".png", "image");
         resourceManager.add("base/base_broken"+baseSize+".png", "image");
     }
+    
+    var xmlFiles = ["barrack.xml", "cabin.xml", "hangar.xml", "house.xml", "level.xml", "mine.xml"];
+    for(var i=0; i<xmlFiles.length; i++ ) {
+        resourceManager.add("xml/" + xmlFiles[i], "xml");
+    }
 
     resourceManager.load(start);
 }
@@ -91,8 +96,10 @@ function prepareMap() {
     var cornerX = 286+117;
     var cornerY = 1342-150;
     var cellSize = 6;
-    var cellUnitX = 15.5;
-    var cellUnitY = 7.7;
+
+    var cellUnitX = 16;
+    var cellUnitY = 8;
+    var cellUnit = 8;
 
     var logicMap = new LogicMap(worldWidth, worldHeight);
     
@@ -123,6 +130,9 @@ function prepareMap() {
         cell.ux = 0;
         cell.uy = 0;
 
+        cell.sux = 0;
+        cell.suy = 0;
+
         map.addChild(cell);
         logicMap.addRect(0, 0, cellSize, cellSize);
 
@@ -130,40 +140,45 @@ function prepareMap() {
             cell.dx += e.data.x;
             cell.dy += e.data.y;
 
-            if( Math.abs(cell.dx) >= cellUnitX ) {
-                var units = (cell.dx > 0 ? 1 : -1) * Math.floor(Math.abs(cell.dx) / cellUnitX);
-                if( (cell.ux + units) < 0 || (cell.ux + units) > 13) {
-                    return;
-                }
+            var fdux = (cell.dx - 2 * cell.dy) / 4 / cellUnit;
+            var fduy = (cell.dx + 2 * cell.dy) / 4 / cellUnit;
 
-                var dx = units * cellUnitX;
-                var dy = units * cellUnitY;
-                cell.x += dx;
-                cell.y += dy;
-                cell.dx -= dx;
+            var dux = (fdux > 0 ? 1:-1) * Math.floor(Math.abs(fdux));
+            var duy = (fduy > 0 ? 1:-1) * Math.floor(Math.abs(fduy));
 
-                cell.ux += units;
+            //trace(cell.dx + ":" + cell.dy + "," + dux + ":" + duy);
+
+            if( dux == 0 && duy == 0 ) {
+                return;
             }
-            if( Math.abs(cell.dy) >= cellUnitY ) {
-                var units = (cell.dy > 0 ? 1 : -1 ) * Math.floor(Math.abs(cell.dy) / cellUnitY);
-                if( (cell.uy + units) < 0 || (cell.uy + units) > 12 ) {
-                    return;
-                }
-
-                var dy = units * cellUnitY;
-                cell.y += dy;
-                cell.dy -= dy;
-
-                cell.uy += units;
+            
+            cell.ux = cell.sux + dux;
+            if( cell.ux < 0 ) {
+                cell.ux = 0;
             }
 
-            trace(logicMap.testRect(cell.ux, cell.uy, cellSize, cellSize));
-            trace(cell.ux + ":" + cell.uy);
+            if( cell.ux >= (worldWidth - cellSize) ) {
+                cell.ux = worldWidth - cellSize - 1;
+            }
+            
+            cell.uy = cell.suy + duy;
+            if( cell.uy < 0 ) {
+                cell.uy = 0;
+            }
+            if( cell.uy >= (worldHeight - cellSize) ) {
+                cell.uy = worldHeight - cellSize - 1;
+            }
+
+            cell.x = cornerX + (cell.ux+cell.uy)*cellUnitX;
+            cell.y = cornerY + (-cell.ux+cell.uy)*cellUnitY;
         });
 
         cell.addEventListener(Event.GESTURE_DRAG_END, function(e) {
             cell.dx = 0;
             cell.dy = 0;
+
+            cell.sux = cell.ux;
+            cell.suy = cell.uy;
         });
     });
 
