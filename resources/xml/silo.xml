@@ -1,0 +1,31 @@
+<!-- 矿石仓库定义
+    [1] 属性
+    level                   等级
+    maxNumPerHQLevel        基地等级允许的最大存在数量
+    constructionTime        建造/升级需要的时间(分钟)
+    constructionMineral     建造/升级需要的矿石
+    constructionCoins       建造/升级需要的金币
+    exp                     建造/升级完成得到的经验
+    scoreBuilt          
+    scoreAttack
+    health                  生命值
+    mineralsStorage         矿石容量上限
+
+    asset                   对应的素材图片名字
+
+    sizeY                   占地尺寸X
+    sizeX                   占地尺寸Y
+--!>
+<Silos>
+    <Silo level="1" maxNumPerHQLevel="1,2,3,4,5" constructionTime="10" constructionMineral="0" constructionCoins="760" exp="3401" scoreBuilt="4" scoreAttack="1" repairTime="0.75" health="750" mineralsStorage="7000"  extraLootWhenDeadPercent="4" extraXpWhenDead="170.05" asset="silo_001" />
+    <Silo level="2" maxNumPerHQLevel="1" constructionTime="15" constructionMineral="0" constructionCoins="1720" exp="6599" scoreBuilt="7" scoreAttack="1" repairTime="1.4" health="1400" mineralsStorage="14000"  extraLootWhenDeadPercent="4" extraXpWhenDead="329.95" asset="silo_001_01" />
+    <Silo level="3" maxNumPerHQLevel="2" constructionTime="22.5" constructionMineral="0" constructionCoins="3460" exp="12170" scoreBuilt="13" scoreAttack="1" repairTime="2.55" health="2550" mineralsStorage="28000"  extraLootWhenDeadPercent="4" extraXpWhenDead="608.5" asset="silo_001_01" />
+    <Silo level="4" maxNumPerHQLevel="2" constructionTime="33.75" constructionMineral="0" constructionCoins="6900" exp="22667" scoreBuilt="23" scoreAttack="2" repairTime="4.75" health="4750" mineralsStorage="56000"  extraLootWhenDeadPercent="4" extraXpWhenDead="1133.35" asset="silo_001_01" />
+    <Silo level="5" maxNumPerHQLevel="3" constructionTime="50.6167" constructionMineral="0" constructionCoins="13800" exp="42902" scoreBuilt="43" scoreAttack="4" repairTime="8.8" health="8800" mineralsStorage="112000"  extraLootWhenDeadPercent="4" extraXpWhenDead="2145.1" asset="silo_001_01" />
+    <Silo level="6" maxNumPerHQLevel="3" constructionTime="75.9333" constructionMineral="0" constructionCoins="27600" exp="82161" scoreBuilt="83" scoreAttack="8" repairTime="16.25" health="16250" mineralsStorage="223000"  extraLootWhenDeadPercent="4" extraXpWhenDead="4108.05" asset="silo_001_01" />
+    <Silo level="7" maxNumPerHQLevel="4" constructionTime="113.9" constructionMineral="0" constructionCoins="55220" exp="158905" scoreBuilt="159" scoreAttack="15" repairTime="25.42" health="30000" mineralsStorage="446000"  extraLootWhenDeadPercent="4" extraXpWhenDead="7945.25" asset="silo_001_02" />
+    <Silo level="8" maxNumPerHQLevel="4" constructionTime="170.8583" constructionMineral="0" constructionCoins="110440" exp="309611" scoreBuilt="310" scoreAttack="29" repairTime="33.66" health="55600" mineralsStorage="893000"  extraLootWhenDeadPercent="4" extraXpWhenDead="15480.55" asset="silo_001_02" />
+    <Silo level="9" maxNumPerHQLevel="5" constructionTime="256.2833" constructionMineral="0" constructionCoins="220880" exp="606918" scoreBuilt="607" scoreAttack="58" repairTime="42.15" health="105000" mineralsStorage="1786000"  extraLootWhenDeadPercent="4" extraXpWhenDead="30345.9" asset="silo_001_02" />
+    <Silo level="10" maxNumPerHQLevel="5" constructionTime="384.4333" constructionMineral="0" constructionCoins="441760" exp="1195385" scoreBuilt="1196" scoreAttack="115" repairTime="50.07" health="190000" mineralsStorage="3571000"  extraLootWhenDeadPercent="4" extraXpWhenDead="59769.25" asset="silo_001_02" />
+</Silos>
+

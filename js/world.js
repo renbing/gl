@@ -129,8 +129,10 @@ function House(data) {
 }
 
 House.prototype = Building.prototype;
+
 House.prototype.levelUp = function() {
     
 };
+
 House.prototype.harvest = function() {
 };

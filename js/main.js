@@ -29,7 +29,7 @@ function loadLoading() {
         resourceManager.add("base/base_broken"+baseSize+".png", "image");
     }
     
-    var xmlFiles = ["barrack.xml", "cabin.xml", "hangar.xml", "house.xml", "level.xml", "mine.xml"];
+    var xmlFiles = ["silo.xml", "house.xml", "mine.xml", "bank"];
     for(var i=0; i<xmlFiles.length; i++ ) {
         resourceManager.add("xml/" + xmlFiles[i], "xml");
     }

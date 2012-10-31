@@ -6,8 +6,8 @@
  *
  */
 
-global.GAME_WIDTH = 960 * 1.5;
-global.GAME_HEIGHT = 640 * 1.5;
+global.GAME_WIDTH = 960 ;//* 1.5;
+global.GAME_HEIGHT = 640 ;//* 1.5;
 global.gameFPS = 25;
 global.renderFPS = 60;
 global.resourceDirectory = "resources/";

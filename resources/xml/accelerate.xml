@@ -1,0 +1,8 @@
+<Definitions>
+    <Definition sku="instantHouses" minutesToOneUSD="300" bound="421" multiplier="6.8742" exponent="0.5008" divisor="100" />
+    <Definition sku="instantUnits" minutesToOneUSD="300" bound="421" multiplier="6.8742" exponent="0.5008" divisor="100" />
+    <Definition sku="instantUnitsTraining" minutesToOneUSD="75" bound="421" multiplier="6.8742" exponent="0.5008" divisor="25" />
+    <Definition sku="conversionResourcesToUSD" minutesToOneUSD="0" multiplier="4.5" exponent="0.3719" divisor="100" />
+    <Definition sku="conversionUSDToResources" minutesToOneUSD="0" multiplier="0.022" exponent="2.6889" divisor="1" />
+</Definitions>
+
