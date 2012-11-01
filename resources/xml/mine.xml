@@ -16,7 +16,7 @@
 
     sizeY                   占地尺寸X
     sizeX                   占地尺寸Y
---!>
+!-->
 <Mines sizeX="6" sizeY="6">
     <Mine level="1" maxNumPerHQLevel="4,6,8,10,12" constructionTime="0.125" constructionMineral="0" constructionCoins="120" exp="328" scoreBuilt="1" scoreAttack="1" energy="750" incomePerMinute="6" incomeCapacity="360" extraXpWhenDead="16.4" asset="mine_001" />
     <Mine level="2" maxNumPerHQLevel="1" constructionTime="2.5" constructionMineral="0" constructionCoins="240" exp="979" scoreBuilt="1" scoreAttack="1" energy="1500" incomePerMinute="11" incomeCapacity="990" extraXpWhenDead="48.95" asset="mine_001_01" />

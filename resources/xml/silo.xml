@@ -15,7 +15,7 @@
 
     sizeY                   占地尺寸X
     sizeX                   占地尺寸Y
---!>
+!-->
 <Silos>
     <Silo level="1" maxNumPerHQLevel="1,2,3,4,5" constructionTime="10" constructionMineral="0" constructionCoins="760" exp="3401" scoreBuilt="4" scoreAttack="1" repairTime="0.75" health="750" mineralsStorage="7000"  extraLootWhenDeadPercent="4" extraXpWhenDead="170.05" asset="silo_001" />
     <Silo level="2" maxNumPerHQLevel="1" constructionTime="15" constructionMineral="0" constructionCoins="1720" exp="6599" scoreBuilt="7" scoreAttack="1" repairTime="1.4" health="1400" mineralsStorage="14000"  extraLootWhenDeadPercent="4" extraXpWhenDead="329.95" asset="silo_001_01" />

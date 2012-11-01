@@ -597,7 +597,7 @@
         this.triggerEvent(e);
 
         // 如果事件触发中停止了事件冒泡,则停止
-        if (e.isStop) {
+        if (e.isStoped) {
             return;
         }
 
@@ -619,7 +619,7 @@
     };
 
     /* 找到冒泡某个事件对应的第一个响应MovieClip
-     * @param eventType: 时间类型 GESTURE_DRAG/GESTURE_SWIPE
+     * @param eventType: 事件类型 GESTURE_DRAG/GESTURE_SWIPE
      */
     proto.bubbleFirstResponser = function (eventType) {
 

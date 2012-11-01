@@ -15,7 +15,7 @@
 
     sizeY                   占地尺寸X
     sizeX                   占地尺寸Y
---!>
+!-->
 <Banks sizeX="6" sizeY="6">
     <Bank level="1" maxNumPerHQLevel="1,2,3,4,5" constructionTime="10" constructionMineral="0" constructionCoins="760" exp="3402" scoreBuilt="4" scoreAttack="1" repairTime="0.75" health="750" coinsStorage="7000"  extraLootWhenDeadPercent="4" extraXpWhenDead="170.1" asset="bank_001" />
     <Bank level="2" maxNumPerHQLevel="1" constructionTime="15" constructionMineral="0" constructionCoins="1720" exp="6599" scoreBuilt="7" scoreAttack="1" repairTime="1.4" health="1400" coinsStorage="14000"  extraLootWhenDeadPercent="4" extraXpWhenDead="329.95" asset="bank_001_01" />

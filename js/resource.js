@@ -10,6 +10,68 @@
  * 资源管理器
  */
 
+var XML = {};
+XML.getByPath = function(node, xpath) {
+    var paths = xpath.split("/");
+    
+    for(var i=0; i<paths.length; i++ ) {
+        var pathName = paths[i];
+        var childs = node.getElementsByTagName(pathName);
+        if(childs.length == 0 ) {
+            return null;
+        }
+
+        node = childs[0];
+    }
+
+    return node;
+};
+
+XML.getByPathAttr = function(node, xpath, attrName, attrValue) {
+
+    var paths = xpath.split("/");
+    
+    for(var i=0; i<paths.length; i++ ) {
+        var pathName = paths[i];
+        var childs = node.getElementsByTagName(pathName);
+        if(childs.length == 0 ) {
+            return null;
+        }
+        
+        if( i < (paths.length -1 ) ) {
+            node = childs[0];
+        }else{
+            for(var j=0; j<childs.length; j++) {
+                var child = childs[j];
+                if(child.getAttribute(attrName) == attrValue) {
+                    return child;
+                }
+            }
+
+            return null;
+        }
+    }
+
+    return node;
+};
+
+XML.getByAttr = function(node, attrName, attrValue){
+    var childs = node.childNodes;
+    for(var j=0; j<childs.length; j++) {
+        var child = childs[j];
+        if( child instanceof Text ) {
+            continue;
+        }
+        if(child.getAttribute(attrName) == attrValue) {
+            return child;
+        }
+    }
+
+    return null;
+};
+
+var CSV = {};
+
 function ResourceManager() {
     this.pool = {};
     this.mask = {};

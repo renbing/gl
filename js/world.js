@@ -53,18 +53,20 @@ LogicMap.prototype.testRect = function(x, y, w, h) {
 
 
 function Building() {
-    this.ux = 0;
-    this.uy = 0;
+    this.ux = this.ux || 0;
+    this.uy = this.uy || 0;
 
-    this.sux = 0;
-    this.suy = 0;
+    this.sux = this.ux;
+    this.suy = this.uy;
 
-    this.size = 0;
+    this.size = this.size || 1;
 
     this.dx = 0;
     this.dy = 0;
 
-    this.addEventListener(Event.GESTURE_DRAG, function(e) {
+    this.updatePosition = updatePosition;
+
+    this.mc.addEventListener(Event.GESTURE_DRAG, function(e) {
         this.dx += e.data.x;
         this.dy += e.data.y;
 
@@ -86,7 +88,7 @@ function Building() {
         }
 
         if( ux >= (global.Map.unitW - this.size) ) {
-            ux = worldWidth - cellSize - 1;
+            ux = global.Map.unitW - this.size - 1;
         }
         
         var uy = this.suy + duy;
@@ -94,44 +96,61 @@ function Building() {
             uy = 0;
         }
         if( uy >= (global.Map.unitH - this.size) ) {
-            uy = worldHeight - cellSize - 1;
+            uy = global.Map.unitH - this.size - 1;
         }
 
-        this.updatePosition(ux, uy);
-    });
+        this.ux = ux;
+        this.uy = uy;
+        this.updatePosition();
+
+    }.bind(this));
+
+    this.mc.addEventListener(Event.GESTURE_DRAG_END, function(e) {
+        this.sux = this.ux;
+        this.suy = this.uy;
+        this.dx = 0;
+        this.dy = 0;
+    }.bind(this));
+
+    /* 更新位置显示
+     */
+    function updatePosition(){
+        this.mc.x = global.Map.startX + (this.ux+this.uy)*global.Map.cellUnitX;
+        this.mc.y = global.Map.startY + (-this.ux+this.uy)*global.Map.cellUnitY;
+    };
 }
 
-Building.prototype.updatePosition = function(ux, uy) {
-    this.ux = ux;
-    this.uy = uy;
 
-    this.sux = ux;
-    this.suy = uy;
-
-    this.mc.x = global.Map.startX + (this.ux+this.uy)*global.Map.cellUnitX;
-    this.mc.y = global.Map.startY + (-this.ux+this.uy)*global.Map.cellUnitY;
-};
-
-
-function House(data) {
-    Building.call(this);
-
-    this.level = 1;
+function ResourceBuilding(data, id) {
+    this.level = data.level || 1;
     this.timer = 0;
+    this.id = id;
 
     this.size = 6;
-    this.mc = new MovieClip("house");
-    var basePic = resourceManager.get("base/base"+this.size+".png", "image").data;
+    this.mc = new MovieClip("ResourceBuilding_" + this.id);
+
+    Building.call(this);
+    this.update();
+}
+
+ResourceBuilding.prototype.update = function() {
+    this.mc.removeAllChild();
+
+    var basePic = resourceManager.get("base/base"+this.size+".png").data;
     this.mc.addChild( new Texture(basePic, 0, 0, basePic.width, basePic.height, 
                     -Math.round(basePic.width/2), -Math.round(basePic.height/2), basePic.width, basePic.height));
 
-    this.updatePosition(data.ux, data.uy);
-}
-
-House.prototype = Building.prototype;
-
-House.prototype.levelUp = function() {
+    var houseConfs = resourceManager.get("xml/house.xml").data;
+    var houseConf = XML.getByPathAttr(houseConfs, "Houses/House", "level", this.level);
+    if( !houseConf ) {
+        this.level = 1;
+    }
+    var houseConf = XML.getByPathAttr(houseConfs, "Houses/House", "level", this.level);
+    var housePic = resourceManager.get(houseConf.getAttribute("asset") + "_ready.png").data;
+    this.mc.addChild( new Texture(housePic, 0, 0, housePic.width, housePic.height, 
+                    -Math.round(housePic.width/2), -Math.round(housePic.height-basePic.height/2), housePic.width, housePic.height));
     
+    this.updatePosition();
 };
 
 House.prototype.harvest = function() {

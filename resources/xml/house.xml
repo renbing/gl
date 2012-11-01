@@ -16,7 +16,7 @@
 
     sizeY                   占地尺寸X
     sizeX                   占地尺寸Y
---!>
+!-->
 <Houses sizeX="6" sizeY="6">
     <House level="1"  maxNumPerHQLevel="4,6,8,10,12" constructionTime="0.375" constructionMineral="0" constructionCoins="360" exp="983" scoreBuilt="1" scoreAttack="1" health="750" incomePerMinute="6" incomeCapacity="360" extraXpWhenDead="49.15" asset="house_001" />
     <House level="2"  maxNumPerHQLevel="1" constructionTime="7.5" constructionMineral="0" constructionCoins="760" exp="3041" scoreBuilt="4" scoreAttack="1" health="1500" incomePerMinute="11" incomeCapacity="990" extraXpWhenDead="152.05" asset="house_001_01" />
