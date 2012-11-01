@@ -70,7 +70,49 @@ XML.getByAttr = function(node, attrName, attrValue){
     return null;
 };
 
-var CSV = {};
+function CSV(rawData) {
+    this.data = [];
+    this.column = [];
+
+    var rows = rawData.split("\n");
+    for( var i=0; i<rows.length; i++ ) {
+        var row = rows[i];
+        var cols = row.split(",");
+        if( i == 0 ) {
+            this.column = cols;
+        }else if( i > 1 && cols.length == this.column.length ) {
+            this.data.push(cols); 
+        }
+    }
+}
+
+CSV.prototype.get = function(id, level) {
+    var bFinding = false;
+
+    for( var i=0,max=this.data.length; i<max; i++ ) {
+        var row = this.data[i];
+        if( row[0] == id ) {
+            bFinding = true;
+        }
+
+        if( row[0] != "" && row[0] != id && bFinding ) {
+            bFinding = false;
+        }
+
+        if( bFinding ) {
+            if( row[3] == level ) {
+                var obj = {};
+                for( var j=0,max=this.column.length; j<max; j++ ) {
+                    obj[this.column[j]] = row[j];
+                }
+
+                return obj;
+            }
+        }
+    }
+
+    return null;
+};
 
 function ResourceManager() {
     this.pool = {};
@@ -92,7 +134,12 @@ ResourceManager.prototype.remove = function(path) {
 
 ResourceManager.prototype.get = function(path) {
     var obj = this.pool[path];
-    if(obj && obj.type == "image" && obj.args == "masked") {
+    if( !obj ) {
+        trace("no resource:" + path);
+        return null;
+    }
+
+    if(obj.type == "image" && obj.args == "masked") {
         // PNG -> JPG + mask PNG
         if( path in this.mask ) {
             obj.data = this.mergeImageMask(obj.data, this.mask[path]);
@@ -100,7 +147,7 @@ ResourceManager.prototype.get = function(path) {
         }
     }
 
-    return obj;
+    return obj.data;
 };
 
 ResourceManager.prototype.load = function(onAllLoad, onLoad) {
@@ -148,6 +195,8 @@ ResourceManager.prototype.load = function(onAllLoad, onLoad) {
                             pool[path].data = new DOMParser().parseFromString(xhr.responseText, "text/xml");
                         }else if(type == "json") {
                             pool[path].data = eval("(" + xhr.responseText + ")");
+                        }else if(type == "csv" ) {
+                            pool[path].data = new CSV(xhr.responseText);
                         }else{
                             pool[path].data = xhr.responseText;
                         }

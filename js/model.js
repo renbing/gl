@@ -12,7 +12,7 @@
 
 var User = {};
 
-User.stat = {
+User.base = {
     xp      : 100,
     score   : 0,
     coin    : 0,
@@ -23,12 +23,12 @@ User.stat = {
 };
 
 User.map = {
-    1010 : {type:'House', level:1, timer:0},
-    1010 : {type:'Mine', level:1, timer:0},
-    1020 : {type:'Bank', level:1, stored:0},
-    1020 : {type:'Silo', level:1, stored:0},
-    1030 : {type:'Hangar', level:1},
-    //1030 : {type:'Defence', name='snipper', level:1},
+    1010 : {id:'house', level:1, timer:0},
+    2010 : {id:'mine', level:1, timer:0},
+    3020 : {id:'bank', level:1, stored:0},
+    4020 : {id:'silo', level:1, stored:0},
+    5030 : {id:'barrack', level:1},
+    6030 : {id:'hangar', level:1},
 };
 
 User.troops = {

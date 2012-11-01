@@ -38,7 +38,7 @@ global.Color = {
 global.assets = [
 
 // 配置文件
-    "building.csv",
+    "buildings.csv",
 
 // 图片资源
     "bg.jpg",

@@ -120,8 +120,7 @@ function Building() {
     };
 }
 
-
-function ResourceBuilding(data, id) {
+function ResourceBuilding(id, data) {
     this.level = data.level || 1;
     this.timer = 0;
     this.id = id;
@@ -136,22 +135,21 @@ function ResourceBuilding(data, id) {
 ResourceBuilding.prototype.update = function() {
     this.mc.removeAllChild();
 
-    var basePic = resourceManager.get("base/base"+this.size+".png").data;
+    var basePic = resourceManager.get("base"+this.size+".png");
     this.mc.addChild( new Texture(basePic, 0, 0, basePic.width, basePic.height, 
                     -Math.round(basePic.width/2), -Math.round(basePic.height/2), basePic.width, basePic.height));
 
-    var houseConfs = resourceManager.get("xml/house.xml").data;
-    var houseConf = XML.getByPathAttr(houseConfs, "Houses/House", "level", this.level);
-    if( !houseConf ) {
+    var buildingCSV = resourceManager.get("buildings.csv");
+    var buildingConf = buildingCSV.get(this.id, this.level);
+
+    if( !buildingConf ) {
         this.level = 1;
+        buildingConf = buildingCSV.get(this.id, this.level);
     }
-    var houseConf = XML.getByPathAttr(houseConfs, "Houses/House", "level", this.level);
-    var housePic = resourceManager.get(houseConf.getAttribute("asset") + "_ready.png").data;
-    this.mc.addChild( new Texture(housePic, 0, 0, housePic.width, housePic.height, 
-                    -Math.round(housePic.width/2), -Math.round(housePic.height-basePic.height/2), housePic.width, housePic.height));
+
+    var buildingPic = resourceManager.get(this.id + "_" + buildingConf.Asset + ".png");
+    this.mc.addChild( new Texture(buildingPic, 0, 0, buildingPic.width, buildingPic.height, 
+                    -Math.round(buildingPic.width/2), -Math.round(buildingPic.height-basePic.height/2), buildingPic.width, buildingPic.height));
     
     this.updatePosition();
-};
-
-House.prototype.harvest = function() {
 };
