@@ -232,6 +232,17 @@
         return null;
     };
 
+    /* 删除子节点,根据位置
+     * @param index: 子节点位置
+     */
+    proto.removeChildAt = function (index) {
+        if(index < 0) return;
+        var children = this.frames[this.currentFrame];
+        if( index >= children.length ) return;
+
+        return children.splice(index, 1)[0];
+    };
+
     /* 删除所有子节点
      */
     proto.removeAllChild = function () {
@@ -421,12 +432,11 @@
                     }
                 }
 
-                texture.bounds = {
-                    x : px,
-                    y : py,
-                    w : matrix.a * texture.dw,
-                    h : matrix.d * texture.dh
-                };
+                texture.bounds.x = px;
+                texture.bounds.y = py;
+                texture.bounds.w = matrix.a * texture.dw;
+                texture.bounds.h = matrix.d * texture.dh;
+
             } else if (child instanceof FillRect) {
                 var px = matrix.a * child.x + matrix.tx;
                 var py = matrix.d * child.y + matrix.ty;
@@ -437,13 +447,12 @@
                 global.context2d.fillStyle = child.color;
                 global.context2d.globalAlpha = child.alpha;
 
-                global.context2d.fillRect(px, py, child.w + 1, child.h + 1);
-                child.bounds = {
-                    x : px,
-                    y : py,
-                    w : child.w,
-                    h : child.h
-                };
+                child.bounds.x = px;
+                child.bounds.y = py;
+                child.bounds.w = matrix.a * child.w;
+                child.bounds.h = matrix.d * child.h;
+
+                global.context2d.fillRect(px, py, child.bounds.w + 1, child.bounds.h + 1);
 
                 global.context2d.fillStyle = fillStyle;
                 global.context2d.globalAlpha = globalAlpha;
@@ -555,7 +564,8 @@
                 if (hitResult) {
                     return hitResult;
                 }
-            } else if (child instanceof Texture || child instanceof FillRect) {
+            } else if (child instanceof Texture || child instanceof FillRect || child instanceof TextField) {
+
                 if( !child.bounds ) {
                     return;
                 }

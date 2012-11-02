@@ -19,6 +19,7 @@
         this.alpha = alpha;
 
         this.parent = null;
+        this.bounds = {x:x, y:y, w:w, h:h};
     }
     
     roseCore.FillRect = FillRect;

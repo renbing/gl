@@ -18,7 +18,7 @@
 
     //return local seconds
     proto.getLocalTime = function () {
-        return (+new Date() / 1000) | 0;
+        return Math.round((+new Date() / 1000));
     };
 
     //return server seconds
@@ -29,9 +29,9 @@
     /// 将秒数转换为(小时:分钟:秒)的格式
     proto.second2stand = function (seconds) {
         var second = seconds % 60;
-        var minites = (seconds / 60) | 0;
+        var minites = Math.floor(seconds / 60);
         var minite = minites % 60;
-        var hour = (minites / 60) | 0;
+        var hour = Math.floor(minites / 60);
 
         return this.formatNum(hour.toString(), 2) + ':' + this.formatNum(minite.toString(), 2) + ':' + this.formatNum(second.toString(), 2);
     };

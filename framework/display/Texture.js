@@ -18,8 +18,11 @@
         this.dy = dy || 0;
         this.dw = dw || img.width;
         this.dh = dh || img.height;
+
         this.parent = null;
         this.rotation = 0;
+
+        this.bounds = {x:dx, y:dy, w:dw, h:dh};
     }
     
     roseCore.Texture = Texture;

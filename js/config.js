@@ -39,6 +39,7 @@ global.assets = [
 
 // 配置文件
     "buildings.csv",
+    "levels.csv",
 
 // 图片资源
     "bg.jpg",
@@ -59,12 +60,12 @@ global.assets = [
     "bank_1.png",
     "bank_2.png",
     "bank_3.png",
-    "barracks_1.png",
-    "barracks_2.png",
-    "barracks_3.png",
-    "hangar_001_01_ready.png",
-    "hangar_001_02_ready.png",
-    "hangar_001_ready.png",
+    "barrack_1.png",
+    "barrack_2.png",
+    "barrack_3.png",
+    "hangar_1.png",
+    "hangar_2.png",
+    "hangar_3.png",
     "headquarter_1.png",
     "headquarter_2.png",
     "headquarter_3.png",

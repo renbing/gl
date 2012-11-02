@@ -65,6 +65,10 @@ function Building() {
     this.dy = 0;
 
     this.updatePosition = updatePosition;
+    
+    if( this.onTouch ) {
+        this.mc.addEventListener(Event.MOUSE_CLICK, this.onTouch.bind(this));
+    }
 
     this.mc.addEventListener(Event.GESTURE_DRAG, function(e) {
         this.dx += e.data.x;
@@ -120,36 +124,116 @@ function Building() {
     };
 }
 
-function ResourceBuilding(id, data) {
-    this.level = data.level || 1;
-    this.timer = 0;
-    this.id = id;
+function ResourceBuilding(corner, data) {
+    this.data = data;
+    this.ux = Math.floor(corner/100);
+    this.uy = corner%100;
 
     this.size = 6;
-    this.mc = new MovieClip("ResourceBuilding_" + this.id);
+    this.mc = new MovieClip("ResourceBuilding_" + this.data.id);
+
+    this.onTickFunc = this.onTick.bind(this);
 
     Building.call(this);
     this.update();
 }
 
 ResourceBuilding.prototype.update = function() {
+    // 0级建造的时候使用1级素材
+    var level = this.data.level > 0 ? this.data.level : 1;
+    var buildingConf = global.csv.building.get(this.data.id, level);
+
+    if( !buildingConf ) {
+        return;
+    }
+
     this.mc.removeAllChild();
 
     var basePic = resourceManager.get("base"+this.size+".png");
     this.mc.addChild( new Texture(basePic, 0, 0, basePic.width, basePic.height, 
                     -Math.round(basePic.width/2), -Math.round(basePic.height/2), basePic.width, basePic.height));
-
-    var buildingCSV = resourceManager.get("buildings.csv");
-    var buildingConf = buildingCSV.get(this.id, this.level);
-
-    if( !buildingConf ) {
-        this.level = 1;
-        buildingConf = buildingCSV.get(this.id, this.level);
-    }
-
-    var buildingPic = resourceManager.get(this.id + "_" + buildingConf.Asset + ".png");
+    
+    var buildingPic = resourceManager.get(this.data.id + "_" + buildingConf.Asset + ".png");
     this.mc.addChild( new Texture(buildingPic, 0, 0, buildingPic.width, buildingPic.height, 
                     -Math.round(buildingPic.width/2), -Math.round(buildingPic.height-basePic.height/2), buildingPic.width, buildingPic.height));
     
+    var upgradeMc = new MovieClip("upgrade");
+    upgradeMc.x = -50;
+    upgradeMc.y = -Math.fround(buildingPic.height-basePic.height/2);
+    upgradeMc.addChild(new TextField("", "", "", 100, 30));
+    this.mc.addChild(upgradeMc);
+
+    global.gameSchedule.scheduleFunc(this.onTickFunc, 1);
+    
     this.updatePosition();
+};
+
+ResourceBuilding.prototype.harvest = function() {
+    if( this.data.upgrade ) return;
+
+    if( this.data.id == "house" || this.data.id == "mine" ) {
+        var buildingConf = global.csv.building.get(this.data.id, this.data.level);
+
+        var now = Math.round(+new Date() / 1000);
+        var output = Math.round(buildingConf.ResourcePerHour * (now /3600));
+        if( output > buildingConf.ResourceMax ) {
+            output = +buildingConf.ResourceMax;
+        }
+        
+        buildingConf = global.csv.building.get(this.data.id, 1);
+        global.model.updateHud(buildingConf.ProducesResource, output);
+
+        this.data.timer = now;
+    }
+};
+
+ResourceBuilding.prototype.upgrade = function() {
+    if( this.data.upgrade ) return;
+
+    var buildingConf = global.csv.building.get(this.data.id, 1);
+    var buildResource = buildingConf.BuildResource;
+    buildingConf = global.csv.building.get(this.data.id, this.data.level+1);
+    if( !buildingConf ) return;
+
+    if( buildResource == "Gold" && +buildingConf.BuildCost > global.model.base.gold ) {
+        alert("金币不够");
+        return;
+    }
+    if( buildResource == "Elixir" && +buildingConf.BuildCost > global.model.base.mine ) {
+        alert("矿石不够");
+        return;
+    }
+
+    
+    global.model.updateHud(buildResource, -buildingConf.BuildCost);
+
+    var now = Math.round(+new Date() / 1000);
+    this.data.upgrade = now + buildingConf.BuildTime * 60;
+};
+
+ResourceBuilding.prototype.onTouch = function(e) {
+    
+    if( global.control.mode == "upgrade" ) {
+        this.upgrade();
+    } else if( global.control.mode == "harvest" ) {
+        this.harvest();
+    }
+    this.update();
+
+    e.stopPropagation();
+};
+
+ResourceBuilding.prototype.onTick = function(e) {
+    if( !this.upgrade ) return;
+
+    var now = Math.round(+new Date() / 1000);
+    if( this.upgrade < now ) {
+        this.mc.getChildByName("upgrade").getChildAt(0).text = "升级剩余时间:" + (now - this.upgrade);
+    }else{
+        this.level += 1;
+        this.upgrade = 0;
+        this.timer = now;
+
+        this.update();
+    }
 };

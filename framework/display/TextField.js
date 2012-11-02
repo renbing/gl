@@ -24,12 +24,14 @@
         this.visible = true;
 
         this.label = global.isInBrowser ? new Object() : new Label();
-        this.text = this.label.text = (text !== undefined && text !== null) ? text : '';
+        this.label.text = (text !== undefined && text !== null) ? text : '';
         this.label.font = font || '14px sans-serif';
         this.label.fillStyle = color || '#ffffff';
         this.label.width = width || 32;
         this.label.height = height || 32;
         this.label.textAlign  = textAlign || 'left'; //left, center, right
+
+        this.bounds = {x:this.x, y:this.y, w:this.label.width, h:this.label.height};
     }
 
     proto.render = function(x, y) {
@@ -39,7 +41,9 @@
         var dx = this.x + x;
         var dy = this.y + y;
 
-        var bounds = {x:dx, y:dy, w:this.label.width, h:this.label.height};
+        this.bounds.x = dx;
+        this.bounds.y = dy;
+
         if( global.isInBrowser ) {
 
             if (global.isShowRect) {
@@ -75,34 +79,39 @@
         } else {
             this.ctx.drawLabel(this.label, dx, dy);
         }
-
-        return bounds;
     }
 
-    proto.setColor = function(color) {
+    proto.__defineSetter__("text", function(text) {
+        this.label.text = (text !== undefined && text !== null) ? text : '';
+    });
+
+    proto.__defineGetter__("text", function() {
+        return this.label.text;
+    });
+
+    proto.__defineSetter__("color", function(color) {
         this.label.fillStyle = color || '#ffffff';
-        return this;
-    };
+    });
 
-    proto.setText = function(text) {
-        this.text = this.label.text = (text !== undefined && text !== null) ? text : '';
-        return this;
-    };
+    proto.__defineGetter__("color", function() {
+        return this.label.fillStyle;
+    });
 
-
-    proto.setFont = function(font) {
+    proto.__defineSetter__("font", function(font) {
         this.label.font = font || '14px sans-serif';
-        return this;
-    };
+    });
 
-    proto.setFillStyle = function(fillStyle) {
-        this.label.fillStyle = fillStyle || '#ffffff';
-        return this;
-    };
+    proto.__defineGetter__("font", function() {
+        return this.label.font;
+    });
 
-    proto.setAlign = function(align) {
+    proto.__defineSetter__("align", function(align) {
         this.label.textAlign  = align || 'left'; //left, center, right
-    };
+    });
+
+    proto.__defineGetter__("align", function() {
+        return this.label.textAlign;
+    });
 
     roseCore.TextField = TextField;
 
