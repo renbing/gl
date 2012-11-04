@@ -2,33 +2,37 @@
  * Created by renbing
  * User: renbing
  * Date: 12-11-01
- * Time: ����2:47
+ * Time: 下午2:47
  *
  */
 
 /**
- * ����ģ��
+ * 数据模型
  */
 
 var User = {};
 
 User.base = {
-    xp      : 100,
-    score   : 100,
-    gold    : 1000,
-    mine    : 1000,
-    cash    : 100,
-    worker  : 2,
-    working : 0,
+    xp          : 100,
+    score       : 100,
+    gold        : 2500,
+    elixir      : 2500,
+    cash        : 100,
+    worker      : 2,
+    working     : 0,
+    elixirmax   : 0,
+    goldmax     : 0,
+    townhall    : 0,
 };
 
 User.map = {
-    1010 : {id:'house',     level:1,    upgrade:0,  timer:0},
-    2010 : {id:'mine',      level:1,    upgrade:0,  timer:0},
-    3020 : {id:'bank',      level:1,    upgrade:0,  stored:0},
-    4020 : {id:'silo',      level:1,    upgrade:0,  stored:0},
-    5030 : {id:'barrack',   level:1,    upgrade:0},
-    6030 : {id:'hangar',    level:1,    upgrade:0},
+    1010 : {id:'gold_mine',     level:1,    upgrade:0,  produce:100},
+    1810 : {id:'elixir_pump',   level:1,    upgrade:0,  produce:100},
+    3010 : {id:'town_hall',     level:3,    upgrade:0},
+    1820 : {id:'gold_storage',  level:1,    upgrade:0},
+    1020 : {id:'elixir_storage',level:1,    upgrade:0},
+    1830 : {id:'barrack',       level:1,    upgrade:0},
+    3030 : {id:'troop_housing', level:1,    upgrade:0},
 };
 
 User.troops = {
@@ -42,4 +46,118 @@ User.troops = {
 
 User.mission = {
     1 : [0,0,0], 
+};
+
+function Model(data) {
+    this.base = data.base;
+    this.map = data.map;
+    this.troops = data.troops;
+    this.mission = data.mission;
+    
+    this.buildingCount = {};
+
+    for( var corner in this.map ) {
+        var building = this.map[corner];
+        if( !this.buildingCount[building.id] ) {
+            this.buildingCount[building.id] = 1;
+        }else {
+            this.buildingCount[building.id] += 1;
+        }
+
+        if( building.id == "town_hall" ) {
+            this.base.townhall = building.level;
+        }
+    }
+}
+
+Model.prototype.mapAdd = function(corner, data) {
+
+    this.map[corner] = data;
+    if( !this.buildingCount[data.id] ) {
+        this.buildingCount[data.id] = 1;
+    }else{
+        this.buildingCount[data.id] += 1;
+    }
+}
+
+Model.prototype.mapRemove = function(corner, data) {
+    delete this.map[corner];
+    if( this.buildingCount[data.id] && this.buildingCount[data.id] > 0 ) {
+        this.buildingCount[data.id] -= 1;
+    }
+}
+
+Model.prototype.updateHud = function(name, value) {
+    var hud = global.stage.getChildByName("ui").getChildByName("hud");
+    name = name.toLowerCase();
+
+    var newValue = this.base[name] + value;
+    if( newValue < 0 ) {
+        alert(name + "不足:" + (-value));
+        return false;
+    }
+
+    if( name == "xp" ) {
+        var oldLevel = global.csv.level.getLevel(this.base.xp);
+        var newLevel = global.csv.level.getLevel(newValue);
+        var nextLevelXp = global.csv.level.getXp(newLevel+1);
+
+        hud.getChildAt(1).text = newLevel + " " + newValue + "/" + nextLevelXp;
+    }else if( name == "gold" ) {
+        if( this.base.gold >= this.base.goldmax && value > 0 ) {
+            alert("金币满了");
+            return false;
+        }
+        if( newValue > this.base.goldmax ) {
+            newValue = this.base.goldmax;
+        }
+        hud.getChildAt(3).text = newValue + "/" + this.base.goldmax;
+    }else if( name == "elixir" ) {
+        if( this.base.elixir >= this.base.elixirmax && value > 0 ) {
+            alert("石油满了");
+            return false;
+        }
+        if( newValue > this.base.elixirmax ) {
+            newValue = this.base.elixirmax;
+        }
+        hud.getChildAt(5).text = newValue + "/" + this.base.elixirmax;
+    }else if( name == "working" ) {
+        hud.getChildAt(7).text = newValue + "/" + this.base.worker;
+    }else if( name == "cash" ) {
+        hud.getChildAt(9).text = newValue;
+    }else if( name == "score" ) {
+        hud.getChildAt(11).text = newValue;
+    }
+
+    this.base[name]  = newValue;
+
+    return true;
+};
+
+Model.prototype.updateResourceLimit = function() {
+    var goldMax = 0;
+    var elixirMax = 0;
+
+    for( var corner in this.map ) {
+        var building = this.map[corner];
+
+        var buildingConf = global.csv.building.get(building.id, building.level);
+        goldMax += buildingConf.MaxStoredGold;
+        elixirMax += buildingConf.MaxStoredElixir;
+    }
+
+    this.base.goldmax = goldMax;
+    this.base.elixirmax = elixirMax;
+
+    this.updateHud("gold", 0);
+    this.updateHud("elixir", 0);
+};
+
+Model.prototype.canWork = function() {
+    if( this.base.working >= this.base.worker ) {
+        alert("没有更多的工人");
+        return false;
+    }
+
+    return true;
 };

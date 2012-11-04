@@ -11,7 +11,7 @@ global.GAME_HEIGHT = 640 * 1.5;
 global.gameFPS = 25;
 global.renderFPS = 60;
 global.resourceDirectory = "resources/";
-global.mediaDirectory = "resources/";
+global.mediaDirectory = "resources/music/";
 global.isShowRect = true;
 
 global.Map = {
@@ -35,57 +35,69 @@ global.Color = {
     PINK : "#ff00ff"
 };
 
-global.assets = [
+global.Assets = [
 
 // 配置文件
-    "buildings.csv",
-    "levels.csv",
+    "csv/buildings.csv",
+    "csv/levels.csv",
+    "csv/townhall_levels.csv",
 
 // 图片资源
-    "bg.jpg",
+    "image/bg.jpg",
 
-    "base1.png",
-    "base4.png",
-    "base6.png",
-    "base8.png",
-    "base10.png",
-    "base12.png",
-    "base_broken1.png",
-    "base_broken4.png",
-    "base_broken6.png",
-    "base_broken8.png",
-    "base_broken10.png",
-    "base_broken12.png",
+    "image/base1.png",
+    "image/base4.png",
+    "image/base6.png",
+    "image/base8.png",
+    "image/base10.png",
+    "image/base12.png",
+    "image/base_broken1.png",
+    "image/base_broken4.png",
+    "image/base_broken6.png",
+    "image/base_broken8.png",
+    "image/base_broken10.png",
+    "image/base_broken12.png",
 
-    "bank_1.png",
-    "bank_2.png",
-    "bank_3.png",
-    "barrack_1.png",
-    "barrack_2.png",
-    "barrack_3.png",
-    "hangar_1.png",
-    "hangar_2.png",
-    "hangar_3.png",
-    "headquarter_1.png",
-    "headquarter_2.png",
-    "headquarter_3.png",
-    "headquarter_4.png",
-    "house_1.png",
-    "house_2.png",
-    "house_3.png",
-    "house_4.png",
-    "house_5.png",
-    "machine_1.png",
-    "machine_2.png",
-    "machine_3.png",
-    "mine_1.png",
-    "mine_2.png",
-    "mine_3.png",
-    "mine_4.png",
-    "shipyard_1.png",
-    "shipyard_2.png",
-    "shipyard_3.png",
-    "silo_1.png",
-    "silo_2.png",
-    "silo_3.png",
+    "image/gold_storage_1.png",
+    "image/gold_storage_2.png",
+    "image/gold_storage_3.png",
+    "image/town_hall_1.png",
+    "image/town_hall_2.png",
+    "image/town_hall_3.png",
+    "image/town_hall_4.png",
+    "image/gold_mine_1.png",
+    "image/gold_mine_2.png",
+    "image/gold_mine_3.png",
+    "image/gold_mine_4.png",
+    "image/gold_mine_5.png",
+    "image/elixir_pump_1.png",
+    "image/elixir_pump_2.png",
+    "image/elixir_pump_3.png",
+    "image/elixir_pump_4.png",
+    "image/elixir_storage_1.png",
+    "image/elixir_storage_2.png",
+    "image/elixir_storage_3.png",
+
+    "image/barrack_1.png",
+    "image/barrack_2.png",
+    "image/barrack_3.png",
+    "image/troop_housing_1.png",
+    "image/troop_housing_2.png",
+    "image/troop_housing_3.png",
+    "image/laboratory_1.png",
+    "image/laboratory_2.png",
+    "image/laboratory_3.png",
+
+    "image/cannon_1.png",
+    "image/archer_tower_1.png",
+    "image/air_defense_1.png",
+    "image/wizard_tower_1.png",
+    "image/mortar_1.png",
+    "image/wall_1.png",
+    "image/wall_2.png",
+    "image/wall_3.png",
+
+    "image/shipyard_1.png",
+    "image/shipyard_2.png",
+    "image/shipyard_3.png",
 ];

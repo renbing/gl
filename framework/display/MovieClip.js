@@ -18,7 +18,7 @@
         this.totalFrames = frameCount || 1;
         this.currentFrame = 1;
         this.frameFloatCursor = 1;
-        this.isStop = false;
+        this.isStoped = false;
         this.useAlphaTest = false; // 默认不开启Alpha测试
 
         // 显示相关
@@ -66,13 +66,13 @@
     /* 停止播放当前MovieClip,不影响子节点是否播放
      */
     proto.stop = function () {
-        this.isStop = true;
+        this.isStoped = true;
     };
 
     /* 播放当前MovieClip,不影响子节点是否播放
      */
     proto.play = function () {
-        this.isStop = false;
+        this.isStoped = false;
     };
 
     /* 跳到指定帧,并停止播放
@@ -469,7 +469,7 @@
             }
         }
 
-        if (!this.isStop) {
+        if (!this.isStoped) {
             this._renderFrame();
         }
 
@@ -625,6 +625,9 @@
             for (var i = 0, max = callbackArr.length; i < max; i++) {
                 callbackArr[i].call(this, e);
             }
+            
+            // 主动停止冒泡
+            e.isStoped = true;
         }
     };
 

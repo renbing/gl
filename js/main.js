@@ -20,15 +20,15 @@ function loadLoading() {
     var loading = new MovieClip("loading");
     global.stage.addChild(loading);
 
-    for(var i=0; i<global.assets.length; i++) {
-        var assetName = global.assets[i];
+    for(var i=0; i<global.Assets.length; i++) {
+        var assetName = global.Assets[i];
         var assetNameSegs = assetName.split(".");
         var assetFileType = assetNameSegs[assetNameSegs.length - 1];
 
         if( assetFileType == "png" || assetFileType == "jpg" ) {
-            resourceManager.add(global.assets[i], "image");
+            resourceManager.add(global.Assets[i], "image");
         }else if( assetFileType == "csv" ) {
-            resourceManager.add(global.assets[i], "csv");
+            resourceManager.add(global.Assets[i], "csv");
         }
     }
 
@@ -53,66 +53,34 @@ function start() {
 function prepareUI() {
 
     var ui = new MovieClip("ui");
+    ui.addChild(new FillRect(0, 0, global.GAME_WIDTH, 30, global.Color.BLACK));
 
     var hud = new MovieClip("hud");
-    var mc = new TextField("等级:");
-    hud.addChild(mc);
-
-    mc = new TextField("1 0/0");
-    mc.x = 50
-    hud.addChild(mc);
-
-    mc = new TextField("金币:");
-    mc.x = 130;
-    hud.addChild(mc);
-
-    mc = new TextField("0/0");
-    mc.x = 165;
-    hud.addChild(mc);
-
-    mc = new TextField("矿石:");
-    mc.x = 200;
-    hud.addChild(mc);
-
-    mc = new TextField("0/0");
-    mc.x = 250;
-    hud.addChild(mc);
-
-    mc = new TextField("工人:");
-    mc.x = 300;
-    hud.addChild(mc);
-
-    mc = new TextField("0/2");
-    mc.x = 350;
-    hud.addChild(mc);
-
-    mc = new TextField("宝石:");
-    mc.x = 400;
-    hud.addChild(mc);
-
-    mc = new TextField("300");
-    mc.x = 450;
-    hud.addChild(mc);
-
-    mc = new TextField("荣誉:");
-    mc.x = 500;
-    hud.addChild(mc);
-
-    mc = new TextField("300");
-    mc.x = 550;
-    hud.addChild(mc);
+    var hudItems = ["等级:","金币:","石油:","工人:","宝石:","荣誉:"];
+    for( var i=0; i<hudItems.length; i++ ) {
+        var mc = new TextField(hudItems[i],"","",100,30,"right");
+        mc.x = i*2 * 100;
+        hud.addChild(mc);
+        mc = new TextField("","","",100,30,"left");
+        mc.x = (i*2+1) * 100;
+        hud.addChild(mc);
+    }
 
     var bottom = new MovieClip("bottom");
     bottom.y = global.GAME_HEIGHT - 128;
 
     var left = new MovieClip("left");
-    left.y = 100;
+    left.y = 50;
 
     var buttons = [ ["nothing","无功能"],   ["accelerate","加速"],
                     ["upgrade","升级建筑"], ["harvest","收取资源"],
-                    ["c_house","建造民居"],  ["c_mine","建造矿井"],
-                    ["c_bank","建造银行"],   ["c_silo","建造矿仓"],
-                    ["c_barrack","建造兵营"],["c_hangar","建造传送门"],
+                    ["c_gold_mine","建造金矿"],  ["c_elixir_pump","建造油井"],
+                    ["c_gold_storage","建造金库"],  ["c_elixir_storage","建造油库"],
+                    ["c_barrack","建造兵营"],["c_troop_housing","建造传送门"],
+                    ["c_laboratory","建造实验室"],["c_cannon","建造加能炮"],
+                    ["c_archer_tower","建造激光塔"],["c_wall","建造围墙"],
+                    ["c_wizard_tower","建造重炮塔"],["c_air_defense","建造防空导弹"],
+                    ["c_mortar","建造核弹塔"],
                 ];
     
     for(var i=0; i<buttons.length; i++) {
@@ -133,7 +101,8 @@ function prepareUI() {
             }
             global.control.mode = this.name;
         });
-        mc.y = i*50;
+        mc.y = Math.floor(i/2)*40;
+        mc.x = (i%2)*120;
         left.addChild(mc);
     }
 
@@ -147,8 +116,10 @@ function prepareUI() {
 
 function prepareMap() {
     var map = new MovieClip("map");
+    map.x = -216;
+    map.y = -844;
 
-    var bg = resourceManager.get("bg.jpg");
+    var bg = resourceManager.get("image/bg.jpg");
     map.addChild(new Texture(bg));
 
     map.addEventListener(Event.GESTURE_DRAG, function(e) {
@@ -175,18 +146,44 @@ function prepareMap() {
 
     map.addEventListener(Event.MOUSE_CLICK, function(e) {
         if( global.control.mode.substr(0,2) == "c_" ) {
+            if( !global.model.canWork() ) return;
+            
+            var buildingId = global.control.mode.substr(2, global.control.mode.length-2);
+            var buildingConf = global.csv.building.get(buildingId, 1);
+
+            var corner = 0;
             var data = new Object();
-            data.id = global.control.mode.split("_")[1];
+            data.id = buildingId;
             data.level = 0;
             data.upgrade = 0;
-            data.timer = 0;
-            data.stored = 0;
+            
+            if( buildingConf.ProducesResource != "" ) {
+                data.produce = 0;
+            }
+            
+            var maxBuild = global.csv.townhall.get(global.model.base.townhall)[buildingConf.Name];
+            if( global.model.buildingCount[data.id] >= maxBuild ) {
+                alert("超出该建筑建造限制:"+maxBuild);
+                return;
+            }
+            
+            var building = null;
+            if( buildingConf.BuildingClass == "Defence" ) {
+                building = new DefenceBuilding(corner, data);
+            }else{
+                building = new ResourceBuilding(corner, data);
+            }
 
-            var building = new ResourceBuilding(0, data);
-            building.upgrade();
-            world.addChild(building.mc);
-
-            global.model.updateHud(buildingConf.BuildResource, -buildingConf.BuildCost);
+            if( global.map.testRect(building.ux, building.uy, building.size, building.size) ) {
+                alert("无法建在该地方,已经存在建筑");
+                return;
+            }
+            if( building.upgrade() ) {
+                world.addChild(building.mc);
+                building.updatePosition();
+                global.model.mapAdd(corner, data);
+                global.map.addRect(building.ux, building.uy, building.size, building.size);
+            }
         }
     });
 
@@ -197,60 +194,39 @@ function prepareWindow() {
 }
 
 function initGame() {
-    global.model = User;
+    global.model = new Model(User);
+
     global.control = {};
     global.control.mode = "";
 
-    var hud = global.stage.getChildByName("ui").getChildByName("hud");
-    global.model.updateHud = function(name, value) {
-        if( name == "Gold" ) {
-            name = "gold";
-        }
-        if( name == "Elixir" ) {
-            name = "mine";
-        }
-        var newValue = global.model.base[name] + value;
+    global.map = new LogicMap(global.Map.unitW, global.Map.unitH);
 
-        if( name == "xp" ) {
-            var oldLevel = global.csv.level.getLevel(global.model.base.xp);
-            var newLevel = global.csv.level.getLevel(newValue);
-            var nextLevelXp = global.csv.level.getXp(newLevel+1);
-
-            hud.getChildAt(1).text = newLevel + " " + newValue + "/" + nextLevelXp;
-        }else if( name == "gold" ) {
-            hud.getChildAt(3).text = newValue;
-        }else if( name == "mine" ) {
-            hud.getChildAt(5).text = newValue;
-        }else if( name == "working" ) {
-            hud.getChildAt(7).text = newValue + "/" + global.model.base.worker;
-        }else if( name == "cash" ) {
-            hud.getChildAt(9).text = newValue;
-        }else if( name == "score" ) {
-            hud.getChildAt(11).text = newValue;
-        }
-
-        global.model.base[name]  = newValue;
-    };
-
+    global.model.updateResourceLimit();
     global.model.updateHud("xp", 0);
     global.model.updateHud("gold", 0);
-    global.model.updateHud("mine", 0);
+    global.model.updateHud("elixir", 0);
     global.model.updateHud("working", 0);
     global.model.updateHud("cash", 0);
     global.model.updateHud("score", 0);
 
     var world = global.stage.getChildByName("map").getChildByName("world");
-
     for( var corner in global.model.map ) {
         var data = global.model.map[corner];
         var building = new ResourceBuilding(corner, data);
 
         world.addChild(building.mc);
+        building.updatePosition();
+
+        global.map.addRect(building.ux, building.uy, building.size, building.size);
     }
+
+    var bgMusic = new Sound("home_music.mp3");
+    //global.soundManager.playBackground(bgMusic);
 }
 
 function initConf() {
     global.csv = {};
-    global.csv.building = new BuildingCSV(resourceManager.get("buildings.csv"));
-    global.csv.level = new LevelCSV(resourceManager.get("levels.csv"));
+    global.csv.building = new BuildingCSV(resourceManager.get("csv/buildings.csv"));
+    global.csv.level = new LevelCSV(resourceManager.get("csv/levels.csv"));
+    global.csv.townhall = new TownHallLevelCSV(resourceManager.get("csv/townhall_levels.csv"));
 }
