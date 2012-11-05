@@ -155,11 +155,8 @@ function prepareMap() {
             var data = new Object();
             data.id = buildingId;
             data.level = 0;
-            data.upgrade = 0;
-            
-            if( buildingConf.ProducesResource != "" ) {
-                data.produce = 0;
-            }
+            data.state = BuildingState.NORMAL;
+            data.timer = 0;
             
             var maxBuild = global.csv.townhall.get(global.model.base.townhall)[buildingConf.Name];
             if( global.model.buildingCount[data.id] >= maxBuild ) {
@@ -178,10 +175,11 @@ function prepareMap() {
                 alert("无法建在该地方,已经存在建筑");
                 return;
             }
+
             if( building.upgrade() ) {
                 world.addChild(building.mc);
                 building.updatePosition();
-                global.model.mapAdd(corner, data);
+                global.model.worldAdd(building);
                 global.map.addRect(building.ux, building.uy, building.size, building.size);
             }
         }
@@ -212,13 +210,32 @@ function initGame() {
     var world = global.stage.getChildByName("map").getChildByName("world");
     for( var corner in global.model.map ) {
         var data = global.model.map[corner];
-        var building = new ResourceBuilding(corner, data);
+
+        var building = null;
+        if( !data.level ) {
+            building = new ObstacleBuilding(corner, data);
+        }else{
+            var buildingConf = global.csv.building.get(data.id, 1);
+            if( buildingConf.BuildingClass == "Defence" ) {
+                building = new DefenceBuilding(corner, data);
+            }else{
+                building = new ResourceBuilding(corner, data);
+            }
+        }
 
         world.addChild(building.mc);
         building.updatePosition();
-
+        
+        global.model.worldAdd(building);
         global.map.addRect(building.ux, building.uy, building.size, building.size);
     }
+    
+    // world地图更新
+    global.gameSchedule.scheduleFunc(function(){
+        for(var corner in global.model.world ) {
+            global.model.world[corner].onTick();
+        }
+    }, 1);
 
     var bgMusic = new Sound("home_music.mp3");
     //global.soundManager.playBackground(bgMusic);
@@ -229,4 +246,5 @@ function initConf() {
     global.csv.building = new BuildingCSV(resourceManager.get("csv/buildings.csv"));
     global.csv.level = new LevelCSV(resourceManager.get("csv/levels.csv"));
     global.csv.townhall = new TownHallLevelCSV(resourceManager.get("csv/townhall_levels.csv"));
+    global.csv.obstacle = new CommonCSV(resourceManager.get("csv/obstacles.csv"));
 }

@@ -19,12 +19,21 @@ function BuildingCSV(rawData) {
     for( var i=0; i<rows.length; i++ ) {
         var cols = rows[i].split(",");
         if( i == 0 ) {
-            this.column = cols;
+            for(var j=0; j<cols.length; j++ ) {
+                this.column.push(cols[j].trim());
+            }
+            continue;
+        }else if( i == 1 ) {
+            continue;
         }else if( i == 2 ) {
-            this.columnType = cols;
-        }else if( i > 2 && cols.length == this.column.length) {
-            this.data.push(cols); 
+            for(var j=0; j<cols.length; j++ ) {
+                this.columnType.push(cols[j].trim().toLowerCase());
+            }
+            continue;
         }
+        if( cols.length != this.column.length ) continue;
+
+        this.data.push(cols); 
     }
 }
 
@@ -96,12 +105,23 @@ function TownHallLevelCSV(rawData) {
     this.data = {};
 
     var rows = rawData.split("\n");
-    var column = rows[0].split(",");
-    var columnType = rows[1].split(",");
+    var column = [];
+    var columnType = [];
     
     var prevCols = null;
-    for( var i=2; i<rows.length; i++ ) {
+    for( var i=0; i<rows.length; i++ ) {
         var cols = rows[i].split(",");
+        if( i == 0 ) {
+            for(var j=0; j<cols.length; j++ ) {
+                column.push(cols[j].trim());
+            }
+            continue;
+        }else if( i == 1 ) {
+            for(var j=0; j<cols.length; j++ ) {
+                columnType.push(cols[j].trim().toLowerCase());
+            }
+            continue;
+        }
         if( cols.length != column.length ) continue;
         
         var obj = {};
@@ -128,3 +148,44 @@ function TownHallLevelCSV(rawData) {
 TownHallLevelCSV.prototype.get = function(level) {
     return this.data[level];
 };
+
+function CommonCSV(rawData) {
+    this.data = {};
+
+    var rows = rawData.split("\n");
+    var column = [];
+    var columnType = [];
+
+    for( var i=0; i<rows.length; i++ ) {
+        var cols = rows[i].split(",");
+        if( i == 0 ) {
+            for(var j=0; j<cols.length; j++ ) {
+                column.push(cols[j].trim());
+            }
+            continue;
+        }else if( i == 1 ) {
+            for(var j=0; j<cols.length; j++ ) {
+                columnType.push(cols[j].trim().toLowerCase());
+            }
+            continue;
+        }
+        if( cols.length != column.length ) continue;
+
+        var obj = {};
+        for( var j=0; j<cols.length; j++ ) {
+            var value = cols[j];
+            if( columnType[j] == "int" ) {
+                value = +value;
+            }else if( columnType[j] == "boolean" ) {
+                value = (value.toLowerCase() == "true");
+            }
+
+            obj[column[j]] = value;
+        }
+        this.data[obj.ID] = obj;
+    }
+}
+
+CommonCSV.prototype.get = function(id) {
+    return this.data[id];
+}

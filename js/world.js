@@ -51,6 +51,12 @@ LogicMap.prototype.testRect = function(x, y, w, h) {
     return false;
 };
 
+var BuildingState = {
+    NORMAL : 0,
+    UPGRAD : 1,
+    PRODUCE : 2,
+    CLEAR : 3,
+}
 
 function Building(corner, data) {
     this.data = data;
@@ -66,10 +72,18 @@ function Building(corner, data) {
     this.dy = 0;
 
     var buildingConf = global.csv.building.get(this.data.id, 1);
+    if( !buildingConf ) {
+        buildingConf = global.csv.obstacle.get(this.data.id);
+    }
+
     this.name = buildingConf.Name;
     this.size = buildingConf.Width;
 
     this.mc.addEventListener(Event.GESTURE_DRAG, function(e) {
+        if( this instanceof ObstacleBuilding ) {
+            return;
+        }
+
         this.dx += e.data.x;
         this.dy += e.data.y;
 
@@ -109,6 +123,10 @@ function Building(corner, data) {
     }.bind(this));
 
     this.mc.addEventListener(Event.GESTURE_DRAG_END, function(e) {
+        if( this instanceof ObstacleBuilding ) {
+            return;
+        }
+
         this.dx = 0;
         this.dy = 0;
 
@@ -129,6 +147,7 @@ function Building(corner, data) {
             this.upgrade();
         }else if( global.control.mode == "harvest" ) {
             this.harvest && this.harvest();
+            this.clear && this.clear();
         }else if( global.control.mode == "accelerate" ) {
             this.accelerate();
         }
@@ -171,8 +190,9 @@ function Building(corner, data) {
     /* 升级
      */
     this.upgrade = function() {
+        if( this instanceof ObstacleBuilding ) return;
 
-        if( this.data.upgrade ) return;
+        if( this.data.state == BuildingState.UPGRAD ) return;
         if( !global.model.canWork() ) return;
 
         var buildingConf = global.csv.building.get(this.data.id, 1);
@@ -192,10 +212,8 @@ function Building(corner, data) {
         }
 
         var now = Math.round(+new Date() / 1000);
-        this.data.upgrade = now + buildingConf.BuildTime * 60;
-        if( this.data.hasOwnProperty("produce") ) {
-            this.data.produce = 0;
-        }
+        this.data.timer = now + buildingConf.BuildTime * 60;
+        this.data.state = BuildingState.UPGRAD;
 
         global.model.updateHud("working", 1);
 
@@ -205,14 +223,18 @@ function Building(corner, data) {
     /* 升级结束
      */
     this.upgraded = function() {
+        if( this instanceof ObstacleBuilding ) return;
+
         // 升级结束,开始生产
         var now = Math.round(+new Date() / 1000);
 
         this.data.level += 1;
-        this.data.upgrade = 0;
+        this.data.state = BuildingState.NORMAL;
         
-        if( this.data.hasOwnProperty("produce") ) {
-            this.data.produce = now;
+        var buildingConf = global.csv.building.get(this.data.id, 1);
+        if( buildingConf.ProducesResource != "" ) {
+            this.data.state = BuildingState.PRODUCE;
+            this.data.timer = now;
         }
 
         if( this.data.id == "town_hall" ) {
@@ -228,33 +250,53 @@ function Building(corner, data) {
     /* 加速升级
      */
     this.accelerate = function() {
-        if( !this.data.upgrade ) return;
-        
-        global.model.updateHud("cash", -5);
-        this.upgraded();
+        if( this.data.state == BuildingState.UPGRAD ) {
+            global.model.updateHud("cash", -5);
+            this.upgraded();
+        }else if( this.data.state == BuildingState.CLEAR ) {
+            global.model.updateHud("cash", -5);
+            this.cleared();
+        }
     };
 
+    /* 删除
+     */
+    this.deleted = function() {
+        global.model.worldRemove(this);
+        this.mc.removeFromParent();
+    };
 
     this.onTick = function() {
         var now = Math.round(+new Date() / 1000);
-        if( this.data.upgrade ) {
-            if( now < this.data.upgrade) {
-                this.mc.getChildByName("tip").getChildAt(0).text = "建造/升级 剩余时间:" + (this.data.upgrade - now);
+        var tip = this.mc.getChildByName("tip");
+        tip.visible = true;
+
+        if( this.data.state == BuildingState.UPGRAD ) {
+            if( now < this.data.timer ) {
+                tip.getChildAt(0).text = "建造/升级 剩余时间:" + (this.data.timer - now);
             }else{
                 this.upgraded();
+                tip.visible = false;
             }
-        }else if( this.data.hasOwnProperty("produce") && this.data.produce ) {
-                this.mc.getChildByName("tip").getChildAt(0).text = "生产时间:" + (now - this.data.produce);
+        }else if( this.data.state == BuildingState.PRODUCE ) {
+                tip.getChildAt(0).text = "生产时间:" + (now - this.data.timer);
+        }else if( this.data.state == BuildingState.CLEAR ) {
+            if( now < this.data.timer ) {
+                tip.getChildAt(0).text = "清理 剩余时间:" + (this.data.timer - now);
+            }else{
+                this.cleared();
+                tip.visible = false;
+            }
+        }else{
+            tip.visible = false;
         }
-    }.bind(this);
+    };
     
     this.update();
-    global.gameSchedule.scheduleFunc(this.onTick, 1);
 }
 
 function ResourceBuilding(corner, data) {
 
-    this.size = 6;
     this.mc = new MovieClip("ResourceBuilding_" + data.id);
 
     Building.call(this, corner, data);
@@ -291,33 +333,31 @@ ResourceBuilding.prototype.update = function() {
 };
 
 ResourceBuilding.prototype.harvest = function() {
-    if( !this.data.produce ) return;
+    if( this.data.state != BuildingState.PRODUCE ) return;
 
-    if( this.data.hasOwnProperty("produce") ) {
-        var buildingConf = global.csv.building.get(this.data.id, this.data.level);
-        
-        var now = Math.round(+new Date() / 1000);
-        var produceSeconds = now - this.data.produce;
-        var output = Math.round(buildingConf.ResourcePerHour * produceSeconds / 3600);
-        if( output > buildingConf.ResourceMax ) {
-            output = +buildingConf.ResourceMax;
-        }
+    var buildingConf = global.csv.building.get(this.data.id, this.data.level);
+    
+    var now = Math.round(+new Date() / 1000);
+    var produceSeconds = now - this.data.timer;
+    var output = Math.round(buildingConf.ResourcePerHour * produceSeconds / 3600);
+    if( output > buildingConf.ResourceMax ) {
+        output = +buildingConf.ResourceMax;
+    }
 
-        buildingConf = global.csv.building.get(this.data.id, 1);
-        if( !global.model.updateHud(buildingConf.ProducesResource, output) ) return;
+    buildingConf = global.csv.building.get(this.data.id, 1);
+    if( !global.model.updateHud(buildingConf.ProducesResource, output) ) return;
 
-        this.data.produce = now;
-        if( this.data.id == "gold_mine" ) {
-            global.soundManager.playEffect("coins_collect_01.wav");
-        }else if( this.data.id == "elixir_pump" ) {
-            global.soundManager.playEffect("elixir_collect_02.wav");
-        }
+    this.data.timer = now;
+    if( this.data.id == "gold_mine" ) {
+        global.soundManager.playEffect("coins_collect_01.wav");
+    }else if( this.data.id == "elixir_pump" ) {
+        global.soundManager.playEffect("elixir_collect_02.wav");
     }
 };
 
 function DefenceBuilding(corner, data) {
 
-    this.mc = new MovieClip("DefenceBuilding_" + this.data.id);
+    this.mc = new MovieClip("DefenceBuilding_" + data.id);
 
     Building.call(this, corner, data);
 }
@@ -346,4 +386,45 @@ DefenceBuilding.prototype.update = function() {
     tip.y = -Math.round(buildingPic.height-basePic.height/2);
     tip.addChild(new TextField("", "", "", 100, 30));
     this.mc.addChild(tip);
+};
+
+function ObstacleBuilding(corner, data) {
+
+    this.mc = new MovieClip("ObstacleBuilding_" + data.id);
+
+    Building.call(this, corner, data);
+}
+
+ObstacleBuilding.prototype.update = function() {
+    var obstacleConf = global.csv.obstacle.get(this.data.id);
+
+    this.mc.removeAllChild();
+
+    var obstaclePic = resourceManager.get("obstacle/deco_" + this.data.id + ".png");
+    this.mc.addChild( new Texture(obstaclePic, 0, 0, obstaclePic.width, obstaclePic.height, 
+                    -Math.round(obstaclePic.width/2), -Math.round(obstaclePic.height/2), obstaclePic.width, obstaclePic.height));
+    
+    this.mc.addChild(tip);
+
+    var tip = new MovieClip("tip");
+    tip.x = -50;
+    tip.y = Math.round(-obstaclePic.height/2);
+    tip.addChild(new TextField("", "", "", 100, 30));
+    this.mc.addChild(tip);
+};
+
+ObstacleBuilding.prototype.clear = function() {
+    var obstacleConf = global.csv.obstacle.get(this.data.id);
+    if( !global.model.updateHud(obstacleConf.ClearResource, -obstacleConf.ClearCost) ) {
+        return;
+    }
+
+    var now = Math.round(+new Date() / 1000);
+
+    this.data.state = BuildingState.CLEAR;
+    this.data.timer = now + obstacleConf.ClearTimeSeconds;
+};
+
+ObstacleBuilding.prototype.cleared = function() {
+    this.deleted();
 };

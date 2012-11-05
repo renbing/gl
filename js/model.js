@@ -26,13 +26,18 @@ User.base = {
 };
 
 User.map = {
-    1010 : {id:'gold_mine',     level:1,    upgrade:0,  produce:100},
-    1810 : {id:'elixir_pump',   level:1,    upgrade:0,  produce:100},
-    3010 : {id:'town_hall',     level:3,    upgrade:0},
-    1820 : {id:'gold_storage',  level:1,    upgrade:0},
-    1020 : {id:'elixir_storage',level:1,    upgrade:0},
-    1830 : {id:'barrack',       level:1,    upgrade:0},
-    3030 : {id:'troop_housing', level:1,    upgrade:0},
+    1010 : {id:'gold_mine',     level:1,    state:2,    timer:100},
+    1810 : {id:'elixir_pump',   level:1,    state:2,    timer:100},
+    3010 : {id:'town_hall',     level:3,    state:0,    timer:0},
+    1820 : {id:'gold_storage',  level:1,    state:0,    timer:0},
+    1020 : {id:'elixir_storage',level:1,    state:0,    timer:0},
+    1830 : {id:'barrack',       level:1,    state:0,    timer:0},
+    3030 : {id:'troop_housing', level:1,    state:0,    timer:0},
+    4000 : {id:'crashship_1',   state:0},
+    4010 : {id:'crater_1',      state:0},
+    4020 : {id:'plant_1',       state:0},
+    4030 : {id:'rock_1',        state:0},
+    4040 : {id:'tree_1',        state:0},
 };
 
 User.troops = {
@@ -54,7 +59,8 @@ function Model(data) {
     this.troops = data.troops;
     this.mission = data.mission;
     
-    this.buildingCount = {};
+    this.buildingCount = {};// 地图上的建筑物分类统计
+    this.world = {};        // 地图上所有的building对象
 
     for( var corner in this.map ) {
         var building = this.map[corner];
@@ -70,20 +76,29 @@ function Model(data) {
     }
 }
 
-Model.prototype.mapAdd = function(corner, data) {
-
-    this.map[corner] = data;
-    if( !this.buildingCount[data.id] ) {
-        this.buildingCount[data.id] = 1;
+Model.prototype.worldAdd = function(building) {
+    var corner = building.ux * 100 + building.uy;
+    
+    this.world[corner] = building;
+    this.map[corner] = building.data;
+        
+    var id = building.data.id;
+    if( !this.buildingCount[id] ) {
+        this.buildingCount[id] = 1;
     }else{
-        this.buildingCount[data.id] += 1;
+        this.buildingCount[id] += 1;
     }
 }
 
-Model.prototype.mapRemove = function(corner, data) {
+Model.prototype.worldRemove = function(building) {
+    var corner = building.ux * 100 + building.uy;
+
+    delete this.world[corner];
     delete this.map[corner];
-    if( this.buildingCount[data.id] && this.buildingCount[data.id] > 0 ) {
-        this.buildingCount[data.id] -= 1;
+
+    var id = building.data.id;
+    if( this.buildingCount[id] && this.buildingCount[id] > 0 ) {
+        this.buildingCount[id] -= 1;
     }
 }
 
@@ -140,8 +155,8 @@ Model.prototype.updateResourceLimit = function() {
 
     for( var corner in this.map ) {
         var building = this.map[corner];
-
         var buildingConf = global.csv.building.get(building.id, building.level);
+        if( !buildingConf ) continue;
         goldMax += buildingConf.MaxStoredGold;
         elixirMax += buildingConf.MaxStoredElixir;
     }
