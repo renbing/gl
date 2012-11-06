@@ -42,6 +42,7 @@ global.Assets = [
     "csv/levels.csv",
     "csv/townhall_levels.csv",
     "csv/obstacles.csv",
+    "csv/globals.csv",
 
 // 图片资源
     "image/bg.jpg",

@@ -189,3 +189,21 @@ function CommonCSV(rawData) {
 CommonCSV.prototype.get = function(id) {
     return this.data[id];
 }
+
+function GlobalCSV(rawData) {
+
+    var rows = rawData.split("\n");
+    for( var i=1; i<rows.length; i++ ) {
+        var cols = rows[i].split(",");
+        if( cols.length != 2 ) {
+            continue;
+        }
+        var key = cols[0];
+        var value = cols[1];
+
+        if( !isNaN(value) ) {
+            value = +value;
+        }
+        this[key] = value;
+    }
+}

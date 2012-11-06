@@ -239,6 +239,15 @@ function initGame() {
 
     var bgMusic = new Sound("home_music.mp3");
     //global.soundManager.playBackground(bgMusic);
+    
+    // 全局按钮
+    global.button = {};
+    global.button.onClick = function(buttonName) {
+    };
+
+    global.windows = {};
+    global.windows.test = new UI.TestWindow({"test":"测试"});
+
 }
 
 function initConf() {
@@ -247,4 +256,5 @@ function initConf() {
     global.csv.level = new LevelCSV(resourceManager.get("csv/levels.csv"));
     global.csv.townhall = new TownHallLevelCSV(resourceManager.get("csv/townhall_levels.csv"));
     global.csv.obstacle = new CommonCSV(resourceManager.get("csv/obstacles.csv"));
+    global.csv.global = new GlobalCSV(resourceManager.get("csv/globals.csv"));
 }
