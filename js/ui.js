@@ -13,7 +13,7 @@ UI.Window = function() {
     this.height = this.height || 400;
 
     this.mc.x = (global.GAME_WIDTH - this.width)/2;
-    this.mc.y = (global.GAME_HEIGHT - this.height)/2;
+    this.mc.y = 100;
 
     this.mc.addChild(new FillRect(0, 0, this.width, this.height, global.Color.WHITE));
     var closeBtn = new MovieClip("closeButton");
@@ -62,10 +62,10 @@ UI.TestWindow = function(buttons){
     }
 };
 
-UI.CharacterWindow = function(items){
+UI.CharacterWindow = function(items, type){
 
-    this.width = 580;
-    this.height = 400;
+    this.width = 720;
+    this.height = 500;
     this.itemWidth = 120;
     this.itemHeight = 100;
 
@@ -75,8 +75,8 @@ UI.CharacterWindow = function(items){
     for( var key in items ) {
         var name = items[key];
         var mc = new MovieClip(key);
-        mc.x = 20 + (i%4) * (this.itemWidth + 20);
-        mc.y = 20 + Math.floor(i/4) * (this.itemHeight + 40 + 20);
+        mc.x = 20 + (i%5) * (this.itemWidth + 20);
+        mc.y = 20 + Math.floor(i/5) * (this.itemHeight + 40 + 20);
 
         var itemPic = resourceManager.get("shop/"+key+".png");
         mc.addChild( new Texture(itemPic, 0, 0, itemPic.width, itemPic.height, 
@@ -115,29 +115,87 @@ UI.CharacterWindow = function(items){
         };
 
         var tmp;
-        var construct = new MovieClip("construct." + key);
-        tmp = new FillRect(0, 0, 45, 30, global.Color.BLACK);
+        var button = new MovieClip(type + "." + key);
+        tmp = new FillRect(0, 0, 100, 30, global.Color.BLACK);
         tmp.y = this.itemHeight+10;
-        construct.addChild(tmp);
-        tmp = new TextField("建造", "16px sans-serif", global.Color.WHITE, 45, 30, 'center');
+        button.addChild(tmp);
+        var buttonName = (type == "construct") ? "建造" : "升级";
+        tmp = new TextField(buttonName, "16px sans-serif", global.Color.WHITE, 100, 30, 'center');
         tmp.y = this.itemHeight+10;
-        construct.addChild(tmp);
-        mc.addChild(construct);
-        construct.addEventListener(Event.MOUSE_CLICK, callback);
-
-        var upgrade = new MovieClip("upgrade." + key);
-        var tmp = new FillRect(0, 0, 45, 30, global.Color.BLACK);
-        tmp.x = 55;
-        tmp.y = this.itemHeight + 10;
-        upgrade.addChild(tmp);
-        tmp = new TextField("升级", "16px sans-serif", global.Color.WHITE, 45, 30, 'center');
-        tmp.x = 55;
-        tmp.y = this.itemHeight + 10;
-        upgrade.addChild(tmp);
-        mc.addChild(upgrade);
-        upgrade.addEventListener(Event.MOUSE_CLICK, callback);
+        button.addChild(tmp);
+        mc.addChild(button);
+        button.addEventListener(Event.MOUSE_CLICK, callback);
 
         this.mc.addChild(mc);
         i += 1;
+    }
+};
+
+UI.BuildingActionType = {
+   INFO : "info",
+   UPGRADE : "upgrade",
+   TRAIN : "train",
+   RESEARCH : "research",
+   CANCEL : "cancel",
+   ACCELERATE : "accelerate",
+};
+
+UI.BuildingActionWindow = function(buttons) {
+
+    this.width = 500;
+    this.height = 50;
+
+    UI.Window.call(this);
+    
+    for( var key in UI.BuildingActionType ) {
+        var type = UI.BuildingActionType[key];
+        
+        var text = "";
+        if( type == UI.BuildingActionType.INFO ) {
+            text = "查看";
+        }else if( type == UI.BuildingActionType.UPGRADE ) {
+            text = "升级";
+        }else if( type == UI.BuildingActionType.TRAIN ) {
+            text = "训练";
+        }else if( type == UI.BuildingActionType.RESEARCH ) {
+            text = "研究";
+        }else if( type == UI.BuildingActionType.CANCEL ) {
+            text = "取消";
+        }else if( type == UI.BuildingActionType.ACCELERATE ) {
+            text = "加速";
+        }else {
+            continue;
+        }
+
+        var mc = new MovieClip(type);
+        mc.visible = false;
+        mc.addChild(new FillRect(0, 0, 150, 30, global.Color.BLACK));
+        mc.addChild(new TextField(text, "16px sans-serif", global.Color.WHITE, 100, 30, 'center'));
+        mc.y = 10;
+
+        this.mc.addChild(mc);
+    }
+};
+
+UI.BuildingActionWindow.prototype.update = function(buttons) {
+    for( var key in UI.BuildingActionType ) {
+        this.mc.getChildByName(UI.BuildingActionType[key]).visible = false;
+    }
+        
+    for( var i=0; i<buttons.length ; i++ ) {
+        var type = buttons[i][0];
+        var data = buttons[i][1];
+
+        var mc = this.mc.getChildByName(type);
+        mc.visible = true;
+        
+        if( type == UI.BuildingActionType.UPGRADE ) {
+            mc.getChildAt(1).text = "升级:" + data.num + " " + data.resource;
+        }else if( type == UI.BuildingActionType.ACCELERATE ) {
+            mc.getChildAt(1).text = "加速:" + data.cash + "宝石";
+        }
+
+        mc.y = 10;
+        mc.x = 20 + i * 170;
     }
 };

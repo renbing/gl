@@ -53,9 +53,11 @@ LogicMap.prototype.testRect = function(x, y, w, h) {
 
 var BuildingState = {
     NORMAL : 0,
-    UPGRAD : 1,
+    UPGRADE : 1,
     PRODUCE : 2,
     CLEAR : 3,
+    TRAINING : 4,
+    RESEARCH : 5,
 }
 
 function Building(corner, data) {
@@ -150,6 +152,16 @@ function Building(corner, data) {
             this.clear && this.clear();
         }else if( global.control.mode == "accelerate" ) {
             this.accelerate();
+        }else if( global.control.mode == "nothing" ) {
+            if( this.data.id == "barrack" ) {
+                global.windows.character_ground.show();
+            }else if( this.data.id == "machine" ) {
+                global.windows.character_machine.show();
+            }else if( this.data.id == "shipyard" ) {
+                global.windows.character_air.show();
+            }else if( this.data.id == "laboratory" ) {
+                global.windows.character_upgrade.show();
+            }
         }
 
         this.update();
@@ -192,7 +204,7 @@ function Building(corner, data) {
     this.upgrade = function() {
         if( this instanceof ObstacleBuilding ) return;
 
-        if( this.data.state == BuildingState.UPGRAD ) return;
+        if( this.data.state == BuildingState.UPGRADE || this.data.state == BuildingState.TRAINING) return;
         if( !global.model.canWork() ) return;
 
         var buildingConf = global.csv.building.get(this.data.id, 1);
@@ -213,7 +225,7 @@ function Building(corner, data) {
 
         var now = Math.round(+new Date() / 1000);
         this.data.timer = now + buildingConf.BuildTime * 60;
-        this.data.state = BuildingState.UPGRAD;
+        this.data.state = BuildingState.UPGRADE;
 
         global.model.updateHud("working", 1);
 
@@ -250,7 +262,7 @@ function Building(corner, data) {
     /* 加速升级
      */
     this.accelerate = function() {
-        if( this.data.state == BuildingState.UPGRAD ) {
+        if( this.data.state == BuildingState.UPGRADE ) {
             global.model.updateHud("cash", -5);
             this.upgraded();
         }else if( this.data.state == BuildingState.CLEAR ) {
@@ -265,13 +277,49 @@ function Building(corner, data) {
         global.model.worldRemove(this);
         this.mc.removeFromParent();
     };
+    
+    /* 通用建筑显示方式
+     */
+    this.update = this.update || function() {
+        // 0级建造的时候使用1级素材
+        var level = this.data.level > 0 ? this.data.level : 1;
+        var buildingConf = global.csv.building.get(this.data.id, level);
 
-    this.onTick = function() {
+        if( !buildingConf ) {
+            return;
+        }
+        
+        this.mc.removeAllChild();
+
+        var offset = 20;
+        if( this.data.id == "wall" ) {
+            offset = 0;
+        }
+
+
+        var basePic = resourceManager.get("image/base" + this.size+".png");
+        this.mc.addChild( new Texture(basePic, 0, 0, basePic.width, basePic.height, 
+                        -Math.round(basePic.width/2), -Math.round(basePic.height/2), basePic.width, basePic.height));
+        
+        var buildingPic = resourceManager.get("image/" + this.data.id + "_" + buildingConf.Asset + ".png");
+        this.mc.addChild( new Texture(buildingPic, 0, 0, buildingPic.width, buildingPic.height, 
+                        -Math.round(buildingPic.width/2), -Math.round(buildingPic.height-basePic.height/2+offset), buildingPic.width, buildingPic.height));
+        
+        var tip = new MovieClip("tip");
+        tip.x = -50;
+        tip.y = -Math.round(buildingPic.height-basePic.height/2);
+        tip.addChild(new TextField("", "", "", 100, 30));
+        this.mc.addChild(tip);
+    }
+    
+    /* 每秒钟的状态更新
+     */
+    this.onTick = this.onTick || function() {
         var now = Math.round(+new Date() / 1000);
         var tip = this.mc.getChildByName("tip");
         tip.visible = true;
 
-        if( this.data.state == BuildingState.UPGRAD ) {
+        if( this.data.state == BuildingState.UPGRADE ) {
             if( now < this.data.timer ) {
                 tip.getChildAt(0).text = "建造/升级 剩余时间:" + (this.data.timer - now);
             }else{
@@ -287,6 +335,12 @@ function Building(corner, data) {
                 this.cleared();
                 tip.visible = false;
             }
+        }else if( this.data.state == BuildingState.TRAINING ) {
+            if( now < this.data.timer ) {
+                tip.getChildAt(0).text = "剩余训练时间:" + (this.data.timer - now);
+            }else{
+                tip.visible = this.trained();
+            }
         }else{
             tip.visible = false;
         }
@@ -301,36 +355,6 @@ function ResourceBuilding(corner, data) {
 
     Building.call(this, corner, data);
 }
-
-ResourceBuilding.prototype.update = function() {
-    // 0级建造的时候使用1级素材
-    var level = this.data.level > 0 ? this.data.level : 1;
-    var buildingConf = global.csv.building.get(this.data.id, level);
-
-    if( !buildingConf ) {
-        return;
-    }
-    
-    this.mc.removeAllChild();
-
-    var basePic = resourceManager.get("image/base" + this.size+".png");
-    this.mc.addChild( new Texture(basePic, 0, 0, basePic.width, basePic.height, 
-                    -Math.round(basePic.width/2), -Math.round(basePic.height/2), basePic.width, basePic.height));
-    
-    var buildingPic = resourceManager.get("image/" + this.data.id + "_" + buildingConf.Asset + ".png");
-    var offset = 20;
-    if( this.data.id == "wall" ) {
-        offset = 0;
-    }
-    this.mc.addChild( new Texture(buildingPic, 0, 0, buildingPic.width, buildingPic.height, 
-                    -Math.round(buildingPic.width/2), -Math.round(buildingPic.height-basePic.height/2+offset), buildingPic.width, buildingPic.height));
-    
-    var tip = new MovieClip("tip");
-    tip.x = -50;
-    tip.y = -Math.round(buildingPic.height-basePic.height/2);
-    tip.addChild(new TextField("", "", "", 100, 30));
-    this.mc.addChild(tip);
-};
 
 ResourceBuilding.prototype.harvest = function() {
     if( this.data.state != BuildingState.PRODUCE ) return;
@@ -361,32 +385,6 @@ function DefenceBuilding(corner, data) {
 
     Building.call(this, corner, data);
 }
-
-DefenceBuilding.prototype.update = function() {
-    // 0级建造的时候使用1级素材
-    var level = this.data.level > 0 ? this.data.level : 1;
-    var buildingConf = global.csv.building.get(this.data.id, level);
-
-    if( !buildingConf ) {
-        return;
-    }
-    
-    this.mc.removeAllChild();
-
-    var basePic = resourceManager.get("image/base" + this.size+".png");
-    this.mc.addChild( new Texture(basePic, 0, 0, basePic.width, basePic.height, 
-                    -Math.round(basePic.width/2), -Math.round(basePic.height/2), basePic.width, basePic.height));
-    
-    var buildingPic = resourceManager.get("image/" + this.data.id + "_" + buildingConf.Asset + ".png");
-    this.mc.addChild( new Texture(buildingPic, 0, 0, buildingPic.width, buildingPic.height, 
-                    -Math.round(buildingPic.width/2), -Math.round(buildingPic.height-basePic.height/2+20), buildingPic.width, buildingPic.height));
-    
-    var tip = new MovieClip("tip");
-    tip.x = -50;
-    tip.y = -Math.round(buildingPic.height-basePic.height/2);
-    tip.addChild(new TextField("", "", "", 100, 30));
-    this.mc.addChild(tip);
-};
 
 function ObstacleBuilding(corner, data) {
 
@@ -428,3 +426,10 @@ ObstacleBuilding.prototype.clear = function() {
 ObstacleBuilding.prototype.cleared = function() {
     this.deleted();
 };
+
+function ArmyBuilding(corner, data) {
+
+    this.mc = new MovieClip("ArmyBuilding_" + data.id);
+
+    Building.call(this, corner, data);
+}

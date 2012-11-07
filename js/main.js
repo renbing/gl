@@ -158,6 +158,10 @@ function prepareMap() {
             data.state = BuildingState.NORMAL;
             data.timer = 0;
             
+            if( buildingId == "barrack" || buildingId == "machine" || buildingId == "shipyard" ) {
+                data.task = [];
+            }
+            
             var maxBuild = global.csv.townhall.get(global.model.base.townhall)[buildingConf.Name];
             if( global.model.buildingCount[data.id] >= maxBuild ) {
                 alert("超出该建筑建造限制:"+maxBuild);
@@ -195,7 +199,7 @@ function initGame() {
     global.model = new Model(User);
 
     global.control = {};
-    global.control.mode = "";
+    global.control.mode = "nothing";
 
     global.map = new LogicMap(global.Map.unitW, global.Map.unitH);
 
@@ -257,9 +261,36 @@ function initGame() {
 
     global.windows = {};
     global.windows.test = new UI.TestWindow({"test":"测试"});
-    global.windows.character_ground = new UI.SoldierWindow({"marine":"大兵","looter":"掠夺者","flamethrower":"火焰兵","bazooka":"火箭兵","blast":"自爆兵","super_soldier":"超级兵"});
-    global.windows.character_machine = new UI.SoldierWindow({"tank":"坦克","looter_tank":"掠夺坦克","driller":"钻地兵","super_tank":"超级坦克"});
-    global.windows.character_air = new UI.SoldierWindow({"helicopter":"飞行兵","ovni":"飞碟","battleship":"战舰","zeppelin":"飞艇"});
+    global.windows.building_action = new UI.BuildingActionWindow();
+    
+    var all = {};
+    var grounds = {};
+    var machines = {};
+    var airs = {};
+
+    var groundConfs = global.csv.character.getByClass("Ground");
+    for(var i=0; i<groundConfs.length; i++ ) {
+        var obj = groundConfs[i];
+        all[obj.ID] = obj.Name;
+        grounds[obj.ID] = obj.Name;
+    }
+    var machineConfs = global.csv.character.getByClass("Machine");
+    for(var i=0; i<machineConfs.length; i++ ) {
+        var obj = machineConfs[i];
+        all[obj.ID] = obj.Name;
+        machines[obj.ID] = obj.Name;
+    }
+    var airConfs = global.csv.character.getByClass("Air");
+    for(var i=0; i<airConfs.length; i++ ) {
+        var obj = airConfs[i];
+        all[obj.ID] = obj.Name;
+        airs[obj.ID] = obj.Name;
+    }
+
+    global.windows.character_ground = new UI.CharacterWindow(grounds, "construct");
+    global.windows.character_machine = new UI.CharacterWindow(machines, "construct");
+    global.windows.character_air = new UI.CharacterWindow(airs, "construct");
+    global.windows.character_upgrade = new UI.CharacterWindow(all, "upgrade");
 
 }
 
