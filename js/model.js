@@ -15,13 +15,13 @@ var User = {};
 User.base = {
     xp          : 100,
     score       : 100,
-    gold        : 2500,
-    elixir      : 2500,
-    cash        : 100,
+    gold        : 25000000,
+    elixir      : 25000000,
+    cash        : 1000000,
     worker      : 2,
     working     : 0,
-    elixirmax   : 0,
-    goldmax     : 0,
+    elixirmax   : 25000000,
+    goldmax     : 25000000,
     townhall    : 0,
 };
 
@@ -32,7 +32,10 @@ User.map = {
     1820 : {id:'gold_storage',  level:1,    state:0,    timer:0},
     1020 : {id:'elixir_storage',level:1,    state:0,    timer:0},
     1830 : {id:'barrack',       level:1,    state:0,    timer:0},
-    3030 : {id:'troop_housing', level:1,    state:0,    timer:0},
+    3025 : {id:'troop_housing', level:1,    state:0,    timer:0},
+    3040 : {id:'machine',       level:1,    state:0,    timer:0},
+    2040 : {id:'laboratory',    level:1,    state:0,    timer:0},
+    1040 : {id:'shipyard',      level:1,    state:0,    timer:0},
     4000 : {id:'crashship_1',   state:0},
     4010 : {id:'crater_1',      state:0},
     4020 : {id:'plant_1',       state:0},
@@ -40,13 +43,14 @@ User.map = {
     4040 : {id:'tree_1',        state:0},
 };
 
+// 部队数量
 User.troops = {
-    ground : {
-            soldier : 0,
-            marine : 0,
-        },
-    air : {
-    }
+    marine : 10,
+};
+
+// 实验室兵种解锁以及升级等级
+User.laboratory = {
+    marine : {level : 1, timer: 0},
 };
 
 User.mission = {
@@ -161,8 +165,8 @@ Model.prototype.updateResourceLimit = function() {
         elixirMax += buildingConf.MaxStoredElixir;
     }
 
-    this.base.goldmax = goldMax;
-    this.base.elixirmax = elixirMax;
+    //this.base.goldmax = goldMax;
+    //this.base.elixirmax = elixirMax;
 
     this.updateHud("gold", 0);
     this.updateHud("elixir", 0);

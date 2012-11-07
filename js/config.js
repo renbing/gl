@@ -43,10 +43,12 @@ global.Assets = [
     "csv/townhall_levels.csv",
     "csv/obstacles.csv",
     "csv/globals.csv",
+    "csv/characters.csv",
 
 // 图片资源
     "image/bg.jpg",
-
+    
+    // 基础建筑
     "image/base1.png",
     "image/base4.png",
     "image/base6.png",
@@ -79,17 +81,26 @@ global.Assets = [
     "image/elixir_storage_1.png",
     "image/elixir_storage_2.png",
     "image/elixir_storage_3.png",
-
-    "image/barrack_1.png",
-    "image/barrack_2.png",
-    "image/barrack_3.png",
+    
+    // 军队建筑
     "image/troop_housing_1.png",
     "image/troop_housing_2.png",
     "image/troop_housing_3.png",
+    
+    "image/barrack_1.png",
+    "image/barrack_2.png",
+    "image/barrack_3.png",
     "image/laboratory_1.png",
     "image/laboratory_2.png",
     "image/laboratory_3.png",
-
+    "image/machine_1.png",
+    "image/machine_2.png",
+    "image/machine_3.png",
+    "image/shipyard_1.png",
+    "image/shipyard_2.png",
+    "image/shipyard_3.png",
+    
+    // 防御建筑
     "image/cannon_1.png",
     "image/archer_tower_1.png",
     "image/air_defense_1.png",
@@ -98,11 +109,24 @@ global.Assets = [
     "image/wall_1.png",
     "image/wall_2.png",
     "image/wall_3.png",
-
-    "image/shipyard_1.png",
-    "image/shipyard_2.png",
-    "image/shipyard_3.png",
-
+    
+    // 商店图
+    "shop/battleship.png",
+    "shop/bazooka.png",
+    "shop/blast.png",
+    "shop/driller.png",
+    "shop/flamethrower.png",
+    "shop/helicopter.png",
+    "shop/looter.png",
+    "shop/looter_tank.png",
+    "shop/marine.png",
+    "shop/ovni.png",
+    "shop/super_soldier.png",
+    "shop/super_tank.png",
+    "shop/tank.png",
+    "shop/zeppelin.png",
+    
+    // 杂物
     "obstacle/deco_crashship_1.png",
     "obstacle/deco_crater_1.png",
     "obstacle/deco_plant_1.png",

@@ -1,4 +1,4 @@
-Name,AttackCost,Troop Housing,Elixir Storage,Gold Storage,Elixir Pump,Gold Mine,Barrack,Cannon,Wall,Archer Tower,Wizard Tower,Air Defense,Mortar,Alliance Castle,Ejector,Superbomb,Mine,Worker Building,Laboratory,Communications mast,Tesla Tower
+Level,AttackCost,Troop Housing,Elixir Storage,Gold Storage,Elixir Pump,Gold Mine,Barrack,Cannon,Wall,Archer Tower,Wizard Tower,Air Defense,Mortar,Alliance Castle,Ejector,Superbomb,Mine,Worker Building,Laboratory,Communications mast,Tesla Tower
 String,int,int,int,int,int,int,int,int,int,int,int,int,int,int,int,int,int,int,int,int,int
 1,10,1,1,1,1,1,1,2,,,,,,1,,,,5,,,
 2,50,,,,2,2,2,,25,1,,,,,,,,,,,

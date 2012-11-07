@@ -10,6 +10,21 @@
  * CSV配置文件管理
  */
 
+function CSVRowToObject(column, columnType, cols) {
+    var obj = {};
+    for( var j=0,max=column.length; j<max; j++ ) {
+        var value = cols[j];
+        if( columnType[j] == "int" ) {
+            value = +value;
+        }else if( columnType[j] == "boolean" ) {
+            value = (value.toLowerCase() == "true");
+        }
+        obj[column[j]] = value;
+    }
+
+    return obj;
+}
+
 function BuildingCSV(rawData) {
     this.data = [];
     this.column = [];
@@ -52,18 +67,7 @@ BuildingCSV.prototype.get = function(id, level) {
 
         if( bFinding ) {
             if( cols[3] == level ) {
-                var obj = {};
-                for( var j=0,max=this.column.length; j<max; j++ ) {
-                    var value = cols[j];
-                    if( this.columnType[j] == "int" ) {
-                        value = +value;
-                    }else if( this.columnType[j] == "boolean" ) {
-                        value = (value.toLowerCase() == "true");
-                    }
-                    obj[this.column[j]] = value;
-                }
-
-                return obj;
+                return CSVRowToObject(this.column, this.columnType, cols);
             }
         }
     }
@@ -124,23 +128,9 @@ function TownHallLevelCSV(rawData) {
         }
         if( cols.length != column.length ) continue;
         
-        var obj = {};
-        for( var j=0; j<cols.length; j++ ) {
-            if( cols[j] == "" && prevCols ) {
-                cols[j] = prevCols[j];
-            }
+        var obj = CSVRowToObject(column, columnType, cols);
 
-            var value = cols[j];
-            if( columnType[j] == "int" ) {
-                value = +value;
-            }else if( columnType[j] == "boolean" ) {
-                value = (value.toLowerCase() == "true");
-            }
-
-            obj[column[j]] = value;
-        }
-
-        this.data[cols[0]] = obj;
+        this.data[obj.Level] = obj;
         prevCols = cols;
     }
 }
@@ -171,17 +161,7 @@ function CommonCSV(rawData) {
         }
         if( cols.length != column.length ) continue;
 
-        var obj = {};
-        for( var j=0; j<cols.length; j++ ) {
-            var value = cols[j];
-            if( columnType[j] == "int" ) {
-                value = +value;
-            }else if( columnType[j] == "boolean" ) {
-                value = (value.toLowerCase() == "true");
-            }
-
-            obj[column[j]] = value;
-        }
+        var obj = CSVRowToObject(column, columnType, cols);
         this.data[obj.ID] = obj;
     }
 }
@@ -207,3 +187,70 @@ function GlobalCSV(rawData) {
         this[key] = value;
     }
 }
+
+function CharacterCSV(rawData) {
+    this.data = [];
+    this.column = [];
+    this.columnType = [];
+
+    var rows = rawData.split("\n");
+    for( var i=0; i<rows.length; i++ ) {
+        var cols = rows[i].split(",");
+        if( i == 0 ) {
+            for(var j=0; j<cols.length; j++ ) {
+                this.column.push(cols[j].trim());
+            }
+            continue;
+        }else if( i == 1 ) {
+            for(var j=0; j<cols.length; j++ ) {
+                this.columnType.push(cols[j].trim().toLowerCase());
+            }
+            continue;
+        }
+        if( cols.length != this.column.length ) continue;
+
+        this.data.push(cols); 
+    }
+}
+
+CharacterCSV.prototype.get = function(id, level) {
+    var bFinding = false;
+    var myLevel = 0;
+
+    for( var i=0,max=this.data.length; i<max; i++ ) {
+        var cols = this.data[i];
+        if( cols[0] == id ) {
+            //开始查找
+            bFinding = true;
+            myLevel = 1;
+        }
+
+        if( cols[0] != "" && cols[0] != id && bFinding ) {
+            //结束查找
+            return null;
+        }
+
+        if( bFinding ) {
+            if( myLevel == level ) {
+                return CSVRowToObject(this.column, this.columnType, cols);
+            }
+
+            myLevel += 1;
+        }
+    }
+
+    return null;
+};
+
+CharacterCSV.prototype.getByClass = function(characterClass) {
+    var result = [];
+
+    for( var i=0,max=this.data.length; i<max; i++ ) {
+        var cols = this.data[i];
+        if( cols[2] == characterClass ) {
+            result.push(CSVRowToObject(this.column, this.columnType, cols));
+        }
+    }
+
+    return result;
+};

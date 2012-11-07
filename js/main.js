@@ -232,8 +232,18 @@ function initGame() {
     
     // world地图更新
     global.gameSchedule.scheduleFunc(function(){
+        var now = Math.round(+new Date() / 1000);
+
         for(var corner in global.model.world ) {
             global.model.world[corner].onTick();
+        }
+
+        for( var character in global.model.laboratory ) {
+            var data = global.model.laboratory[character];
+            if( data.timer > 0 && now >= data.timer ) {
+                data.level += 1;
+                data.timer = 0;
+            }
         }
     }, 1);
 
@@ -247,6 +257,9 @@ function initGame() {
 
     global.windows = {};
     global.windows.test = new UI.TestWindow({"test":"测试"});
+    global.windows.character_ground = new UI.SoldierWindow({"marine":"大兵","looter":"掠夺者","flamethrower":"火焰兵","bazooka":"火箭兵","blast":"自爆兵","super_soldier":"超级兵"});
+    global.windows.character_machine = new UI.SoldierWindow({"tank":"坦克","looter_tank":"掠夺坦克","driller":"钻地兵","super_tank":"超级坦克"});
+    global.windows.character_air = new UI.SoldierWindow({"helicopter":"飞行兵","ovni":"飞碟","battleship":"战舰","zeppelin":"飞艇"});
 
 }
 
@@ -257,4 +270,5 @@ function initConf() {
     global.csv.townhall = new TownHallLevelCSV(resourceManager.get("csv/townhall_levels.csv"));
     global.csv.obstacle = new CommonCSV(resourceManager.get("csv/obstacles.csv"));
     global.csv.global = new GlobalCSV(resourceManager.get("csv/globals.csv"));
+    global.csv.character = new CharacterCSV(resourceManager.get("csv/characters.csv"));
 }
