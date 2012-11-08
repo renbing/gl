@@ -160,7 +160,10 @@ function prepareMap() {
             
             if( buildingId == "barrack" || buildingId == "machine" || buildingId == "shipyard" ) {
                 data.task = [];
+            }else if( buildingId == "laboratory" ) {
+                data.research = "";
             }
+
             
             var maxBuild = global.csv.townhall.get(global.model.base.townhall)[buildingConf.Name];
             if( global.model.buildingCount[data.id] >= maxBuild ) {
@@ -168,13 +171,7 @@ function prepareMap() {
                 return;
             }
             
-            var building = null;
-            if( buildingConf.BuildingClass == "Defence" ) {
-                building = new DefenceBuilding(corner, data);
-            }else{
-                building = new ResourceBuilding(corner, data);
-            }
-
+            var building = new Building(corner, data);
             if( global.map.testRect(building.ux, building.uy, building.size, building.size) ) {
                 alert("无法建在该地方,已经存在建筑");
                 return;
@@ -215,17 +212,7 @@ function initGame() {
     for( var corner in global.model.map ) {
         var data = global.model.map[corner];
 
-        var building = null;
-        if( !data.level ) {
-            building = new ObstacleBuilding(corner, data);
-        }else{
-            var buildingConf = global.csv.building.get(data.id, 1);
-            if( buildingConf.BuildingClass == "Defence" ) {
-                building = new DefenceBuilding(corner, data);
-            }else{
-                building = new ResourceBuilding(corner, data);
-            }
-        }
+        var building = new Building(corner, data);
 
         world.addChild(building.mc);
         building.updatePosition();
@@ -287,11 +274,12 @@ function initGame() {
         airs[obj.ID] = obj.Name;
     }
 
-    global.windows.character_ground = new UI.CharacterWindow(grounds, "construct");
-    global.windows.character_machine = new UI.CharacterWindow(machines, "construct");
-    global.windows.character_air = new UI.CharacterWindow(airs, "construct");
-    global.windows.character_upgrade = new UI.CharacterWindow(all, "upgrade");
-
+    global.windows.character = {
+        barrack : new UI.CharacterWindow(grounds, "train"),
+        machine : new UI.CharacterWindow(machines, "train"),
+        shipyard : new UI.CharacterWindow(airs, "train"),
+        laboratory : new UI.CharacterWindow(all, "research"),
+    };
 }
 
 function initConf() {

@@ -34,7 +34,7 @@ User.map = {
     3025 : {id:'troop_housing', level:1,    state:0,    timer:0},
     1830 : {id:'barrack',       level:1,    state:0,    timer:0,    task:[]},
     3040 : {id:'machine',       level:1,    state:0,    timer:0,    task:[]},
-    2040 : {id:'laboratory',    level:1,    state:0,    timer:0},
+    2040 : {id:'laboratory',    level:1,    state:0,    timer:0,    research:""},
     1040 : {id:'shipyard',      level:1,    state:0,    timer:0},
     4000 : {id:'crashship_1',   state:0},
     4010 : {id:'crater_1',      state:0},
@@ -50,7 +50,7 @@ User.troops = {
 
 // 实验室兵种解锁以及升级等级
 User.laboratory = {
-    marine : {level : 1, timer: 0},
+    marine : 1,
 };
 
 User.mission = {
@@ -61,6 +61,7 @@ function Model(data) {
     this.base = data.base;
     this.map = data.map;
     this.troops = data.troops;
+    this.laboratory = data.laboratory;
     this.mission = data.mission;
     
     this.buildingCount = {};// 地图上的建筑物分类统计

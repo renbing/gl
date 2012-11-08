@@ -69,6 +69,8 @@ UI.CharacterWindow = function(items, type){
     this.itemWidth = 120;
     this.itemHeight = 100;
 
+    this.building = null;
+
     UI.Window.call(this);
 
     var i=0;
@@ -87,30 +89,9 @@ UI.CharacterWindow = function(items, type){
             panel.hide(); 
             var segs = this.name.split("."); 
             var character = segs[1];
-            if( segs[0] == "construct" ) {
-            }else if( segs[0] == "upgrade" ) {
-                var now = Math.round(+new Date() / 1000);
-                var data = global.model.laboratory[character];
-                if( data && data.timer > 0 ) {
-                    alert("正在升级中");
-                    return;
-                }
-
-                if( !data ) {
-                    data = {level : 0, timer : 0};
-                }
-
-                var characterConf = global.csv.character.get(character, conf.level + 1);
-                if( !characterConf ) {
-                    alert("无法升级,以及达到顶级");
-                }
-
-                if( global.model.updateHud(characterConf.UpgradeResource, -characterConf.UpgradeCose) ) {
-                    return;
-                }
-
-                data.timer = now + characterConf.UpgradeTimeH * 3600;
-                global.model.laboratory[character] = data;
+            if( segs[0] == "train" ) {
+            }else if( segs[0] == "research" ) {
+                panel.building.research(character);
             }
         };
 
@@ -119,7 +100,7 @@ UI.CharacterWindow = function(items, type){
         tmp = new FillRect(0, 0, 100, 30, global.Color.BLACK);
         tmp.y = this.itemHeight+10;
         button.addChild(tmp);
-        var buttonName = (type == "construct") ? "建造" : "升级";
+        var buttonName = (type == "train") ? "训练" : "升级";
         tmp = new TextField(buttonName, "16px sans-serif", global.Color.WHITE, 100, 30, 'center');
         tmp.y = this.itemHeight+10;
         button.addChild(tmp);
@@ -131,19 +112,25 @@ UI.CharacterWindow = function(items, type){
     }
 };
 
+UI.CharacterWindow.prototype.update = function(building) {
+    this.building = building;
+};
+
 UI.BuildingActionType = {
-   INFO : "info",
-   UPGRADE : "upgrade",
-   TRAIN : "train",
-   RESEARCH : "research",
-   CANCEL : "cancel",
-   ACCELERATE : "accelerate",
+   INFO         : "info",
+   UPGRADE      : "upgrade",
+   CLEAR        : "clear",
+   TRAIN        : "train",
+   RESEARCH     : "research",
+   CANCEL       : "cancel",
+   ACCELERATE   : "accelerate",
 };
 
 UI.BuildingActionWindow = function(buttons) {
 
-    this.width = 500;
+    this.width = 550;
     this.height = 50;
+    this.building = null;
 
     UI.Window.call(this);
     
@@ -155,6 +142,8 @@ UI.BuildingActionWindow = function(buttons) {
             text = "查看";
         }else if( type == UI.BuildingActionType.UPGRADE ) {
             text = "升级";
+        }else if( type == UI.BuildingActionType.CLEAR ) {
+            text = "清理";
         }else if( type == UI.BuildingActionType.TRAIN ) {
             text = "训练";
         }else if( type == UI.BuildingActionType.RESEARCH ) {
@@ -170,28 +159,53 @@ UI.BuildingActionWindow = function(buttons) {
         var mc = new MovieClip(type);
         mc.visible = false;
         mc.addChild(new FillRect(0, 0, 150, 30, global.Color.BLACK));
-        mc.addChild(new TextField(text, "16px sans-serif", global.Color.WHITE, 100, 30, 'center'));
+        mc.addChild(new TextField(text, "16px sans-serif", global.Color.WHITE, 150, 30, 'center'));
         mc.y = 10;
+
+        var panel = this;
+        mc.addEventListener(Event.MOUSE_CLICK, function(e){
+            if( this.name == "upgrade" || this.name == "clear" || this.name == "cancel" || this.name == "accelerate" ) {
+                panel.building[this.name]();
+            }else if( this.name == "train" || this.name == "research" ) {
+                global.windows.character[panel.building.data.id].update(panel.building);
+                global.windows.character[panel.building.data.id].show();
+            }else if( this.name == "research" ) {
+                global.windows.character_upgrade.show();
+            }
+            panel.hide();
+        });
 
         this.mc.addChild(mc);
     }
 };
 
-UI.BuildingActionWindow.prototype.update = function(buttons) {
+UI.BuildingActionWindow.prototype.update = function(buttons, building) {
+    this.building = building;
+    buttons = buttons || [];
+
     for( var key in UI.BuildingActionType ) {
         this.mc.getChildByName(UI.BuildingActionType[key]).visible = false;
     }
         
-    for( var i=0; i<buttons.length ; i++ ) {
-        var type = buttons[i][0];
-        var data = buttons[i][1];
+    for( var i=0; i<=buttons.length ; i++ ) {
+        var type;
+        if( i == 0 ) {
+            type = UI.BuildingActionType.INFO;
+        }else{
+            type = buttons[i-1][0];
+        }
 
         var mc = this.mc.getChildByName(type);
         mc.visible = true;
         
         if( type == UI.BuildingActionType.UPGRADE ) {
+            var data = buttons[i-1][1];
             mc.getChildAt(1).text = "升级:" + data.num + " " + data.resource;
+        }else if( type == UI.BuildingActionType.CLEAR ) {
+            var data = buttons[i-1][1];
+            mc.getChildAt(1).text = "清理:" + data.num + " " + data.resource;
         }else if( type == UI.BuildingActionType.ACCELERATE ) {
+            var data = buttons[i-1][1];
             mc.getChildAt(1).text = "加速:" + data.cash + "宝石";
         }
 
