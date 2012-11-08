@@ -69,18 +69,20 @@ UI.CharacterWindow = function(items, type){
     this.itemWidth = 120;
     this.itemHeight = 100;
 
+    this.items = items;
     this.building = null;
+    this.masks = {};
 
     UI.Window.call(this);
 
     var i=0;
-    for( var key in items ) {
-        var name = items[key];
-        var mc = new MovieClip(key);
+    for( var id in items ) {
+        var name = items[id];
+        var mc = new MovieClip(id);
         mc.x = 20 + (i%5) * (this.itemWidth + 20);
         mc.y = 20 + Math.floor(i/5) * (this.itemHeight + 40 + 20);
 
-        var itemPic = resourceManager.get("shop/"+key+".png");
+        var itemPic = resourceManager.get("shop/"+id+".png");
         mc.addChild( new Texture(itemPic, 0, 0, itemPic.width, itemPic.height, 
                     (this.itemWidth-itemPic.width)/2, (this.itemHeight-itemPic.height)/2, itemPic.width, itemPic.height));
         
@@ -96,7 +98,7 @@ UI.CharacterWindow = function(items, type){
         };
 
         var tmp;
-        var button = new MovieClip(type + "." + key);
+        var button = new MovieClip(type + "." + id);
         tmp = new FillRect(0, 0, 100, 30, global.Color.BLACK);
         tmp.y = this.itemHeight+10;
         button.addChild(tmp);
@@ -108,12 +110,38 @@ UI.CharacterWindow = function(items, type){
         button.addEventListener(Event.MOUSE_CLICK, callback);
 
         this.mc.addChild(mc);
+
+        var mask = new MovieClip("mask." + id);
+        mask.visible = false;
+        mask.x = mc.x;
+        mask.y = mc.y;
+        mask.addChild(new FillRect(0, 0, this.itemWidth, this.itemHeight+40, global.Color.BLACK, 0.5));
+
+        this.masks[id] = mask;
+        this.mc.addChild(mask);
+
         i += 1;
     }
 };
 
 UI.CharacterWindow.prototype.update = function(building) {
     this.building = building;
+    
+    if( this.building.buildingBaseConf.BuildingClass == "Army" ) {
+        for( var id in this.items ) {
+            var characterConf = global.csv.character.get(id, 1);
+            this.masks[id].visible = characterConf.BuildingLevel > this.building.data.level;
+        }
+    }else if( this.building.buildingBaseConf.BuildingClass == "Laboratory" ) {
+        for( var corner in global.model.map ) {
+            var building = global.model.map[corner];
+            if( building.buildingBaseConf.BuildingClass == "Army" ) {
+                // 修改characters.csv中CharacterClass 为BuildingClass
+                // 获取building对应的character
+                // 获取解锁的character合集
+            }
+        }
+    }
 };
 
 UI.BuildingActionType = {
