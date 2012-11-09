@@ -1,6 +1,6 @@
 ID,Name,BuildingClass,Level,Asset,BuildTime,BuildResource,BuildCost,TownHallLevel,Width,Height,MaxStoredTroop,MaxStoredGold,MaxStoredElixir,ProducesResource,ResourcePerHour,ResourceMax,UnitProduction,Hitpoints,RegenTime,AttackRange,AttackSpeed,Damage,BuildingW,BuildingH,AirTargets,GroundTargets,MinAttackRange,DamageRadius,PushBack,CanNotSellLast,DefenderCharacter,DefenderCount,DefenderZ,DestructionXP
 ID,名字,代码中的�?等级,素材ID,建造时�?分钟),建造需要资源类型建造花�?,需要的指挥部等�?宽度,高度,军队上限,金币上限,矿物上限,产出资源类型,每小时产�?产出上限,产出限制,生命�?恢复时间,攻击范围,攻击速度,攻击伤害,,,是否攻击空中单位,是否攻击地面单位,最小攻击距�?伤害半径,,,,,,,,,,,,
-String,String,String,int,String,int,String,int,int,int,int,,int,int,String,int,int,int,int,int,int,int,int,int,int,boolean,boolean,int,int,boolean,boolean,String,int,int,int
+String,String,String,int,String,int,String,int,int,int,int,int,int,int,String,int,int,int,int,int,int,int,int,int,int,boolean,boolean,int,int,boolean,boolean,String,int,int,int
 town_hall,Town Hall,TownHall,1,1,1,Gold,0,,10,10,,1000,1000,,,,,1500,30,,,,3,3,,,,,,TRUE,,,,1
 ,,,2,2,10,,1000,,,,,1000,1000,,,,,1600,32,,,,,,,,,,,,,,,2
 ,,,3,1,240,,4000,,,,,1000,1000,,,,,1700,34,,,,,,,,,,,,,,,3

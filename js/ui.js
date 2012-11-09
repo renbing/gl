@@ -63,7 +63,6 @@ UI.TestWindow = function(buttons){
 };
 
 UI.CharacterWindow = function(items, type){
-
     this.width = 720;
     this.height = 500;
     this.itemWidth = 120;
@@ -72,8 +71,40 @@ UI.CharacterWindow = function(items, type){
     this.items = items;
     this.building = null;
     this.masks = {};
+    this.training = {};
 
     UI.Window.call(this);
+        
+    var panel = this;
+    var callback = function(){
+        var segs = this.name.split("."); 
+        var character = segs[1];
+        if( segs[0] == "train" ) {
+            panel.building.train(character, 1);
+            panel.update();
+        }else if( segs[0] == "research" ) {
+            panel.building.research(character);
+            panel.hide(); 
+        }else if( segs[0] == "cancel" ) {
+            panel.building.train(character, -1);
+            panel.update();
+        }else if( segs[0] == "accelerate" ) {
+            panel.building.accelerate();
+            panel.update();
+        }
+    };
+
+    if( type == "train" ) {
+        var tmp;
+        var button = new MovieClip("accelerate");
+        tmp = new FillRect(0, 0, 50, 30, global.Color.BLACK);
+        button.addChild(tmp);
+        tmp = new TextField("加速", "16px sans-serif", global.Color.WHITE, 50, 30, 'center');
+        this.training[id] = tmp;
+        button.addChild(tmp);
+        this.mc.addChild(button);
+        button.addEventListener(Event.MOUSE_CLICK, callback);
+    }
 
     var i=0;
     for( var id in items ) {
@@ -86,30 +117,46 @@ UI.CharacterWindow = function(items, type){
         mc.addChild( new Texture(itemPic, 0, 0, itemPic.width, itemPic.height, 
                     (this.itemWidth-itemPic.width)/2, (this.itemHeight-itemPic.height)/2, itemPic.width, itemPic.height));
         
-        var panel = this;
-        var callback = function(){
-            panel.hide(); 
-            var segs = this.name.split("."); 
-            var character = segs[1];
-            if( segs[0] == "train" ) {
-            }else if( segs[0] == "research" ) {
-                panel.building.research(character);
-            }
-        };
+        if( type == "train" ) {
+            var tmp;
+            var button = new MovieClip(type + "." + id);
+            tmp = new FillRect(0, 0, 65, 30, global.Color.BLACK);
+            tmp.y = this.itemHeight+10;
+            button.addChild(tmp);
+            tmp = new TextField("训练", "16px sans-serif", global.Color.WHITE, 65, 30, 'center');
+            this.training[id] = tmp;
+            tmp.y = this.itemHeight+10;
+            button.addChild(tmp);
+            mc.addChild(button);
+            button.addEventListener(Event.MOUSE_CLICK, callback);
 
-        var tmp;
-        var button = new MovieClip(type + "." + id);
-        tmp = new FillRect(0, 0, 100, 30, global.Color.BLACK);
-        tmp.y = this.itemHeight+10;
-        button.addChild(tmp);
-        var buttonName = (type == "train") ? "训练" : "升级";
-        tmp = new TextField(buttonName, "16px sans-serif", global.Color.WHITE, 100, 30, 'center');
-        tmp.y = this.itemHeight+10;
-        button.addChild(tmp);
-        mc.addChild(button);
-        button.addEventListener(Event.MOUSE_CLICK, callback);
+            button = new MovieClip("cancel" + "." + id);
+            tmp = new FillRect(0, 0, 50, 30, global.Color.BLACK);
+            tmp.x = 70;
+            tmp.y = this.itemHeight+10;
+            button.addChild(tmp);
+            tmp = new TextField("取消", "16px sans-serif", global.Color.WHITE, 50, 30, 'center');
+            tmp.x = 70;
+            tmp.y = this.itemHeight+10;
+            button.addChild(tmp);
+            mc.addChild(button);
+            button.addEventListener(Event.MOUSE_CLICK, callback);
 
-        this.mc.addChild(mc);
+            this.mc.addChild(mc);
+        }else {
+            var tmp;
+            var button = new MovieClip(type + "." + id);
+            tmp = new FillRect(0, 0, this.itemWidth, 30, global.Color.BLACK);
+            tmp.y = this.itemHeight+10;
+            button.addChild(tmp);
+            tmp = new TextField("升级", "16px sans-serif", global.Color.WHITE, this.itemWidth, 30, 'center');
+            tmp.y = this.itemHeight+10;
+            button.addChild(tmp);
+            mc.addChild(button);
+            button.addEventListener(Event.MOUSE_CLICK, callback);
+
+            this.mc.addChild(mc);
+        }
 
         var mask = new MovieClip("mask." + id);
         mask.visible = false;
@@ -125,20 +172,31 @@ UI.CharacterWindow = function(items, type){
 };
 
 UI.CharacterWindow.prototype.update = function(building) {
-    this.building = building;
+    this.building = building || this.building;
     
     if( this.building.buildingBaseConf.BuildingClass == "Army" ) {
+        var training = {};
+        var task = this.building.data.task;
+        for( var i=0; i<task.length; i++ ) {
+            training[task[i][0]] = task[i][1];
+        }
+
         for( var id in this.items ) {
-            var characterConf = global.csv.character.get(id, 1);
-            this.masks[id].visible = characterConf.BuildingLevel > this.building.data.level;
+            var characterBaseConf = global.csv.character.get(id, 1);
+            this.masks[id].visible = characterBaseConf.BuildingLevel > this.building.data.level;
+            this.training[id].text = "训练" + (training[id] ? training[id] : "");
         }
     }else if( this.building.buildingBaseConf.BuildingClass == "Laboratory" ) {
-        for( var corner in global.model.map ) {
-            var building = global.model.map[corner];
-            if( building.buildingBaseConf.BuildingClass == "Army" ) {
-                // 修改characters.csv中CharacterClass 为BuildingClass
-                // 获取building对应的character
-                // 获取解锁的character合集
+        for( var id in this.items ) {
+            var characterBaseConf = global.csv.character.get(id, 1);
+            var characterLevelConf = global.csv.character.get(id, global.model.laboratory[id] ? global.model.laboratory[id]+1:1);
+            // 没有该兵种对应建筑,或者对应等级建筑不够解锁,或者实验室等级不够升级
+            // 还要判断资源够不
+            if( !global.model.buildingMaxLevel[characterBaseConf.BuildingID] || characterBaseConf.BuildingLevel > global.model.buildingMaxLevel[characterBaseConf.BuildingID]
+                || characterLevelConf.LaboratoryLevel > this.building.data.level ) {
+                this.masks[id].visible = true;
+            }else {
+                this.masks[id].visible = false;
             }
         }
     }
@@ -155,7 +213,6 @@ UI.BuildingActionType = {
 };
 
 UI.BuildingActionWindow = function(buttons) {
-
     this.width = 550;
     this.height = 50;
     this.building = null;

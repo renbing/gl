@@ -180,7 +180,7 @@ Building.prototype.onClick = function(e) {
             return;
         }
     }
-    else if( this.data.state == BuildingState.NORMAL ) {
+    else if( this.data.state == BuildingState.NORMAL || this.data.state == BuildingState.TRAIN ) {
         if( this.buildingClass == "Obstacle" ) {
             actions.push([UI.BuildingActionType.CLEAR, {resource:this.buildingBaseConf.ClearResource, num:this.buildingBaseConf.ClearCost}]);
         }else {
@@ -234,13 +234,13 @@ Building.prototype.adjustDepth = function(){
 /* 获取升级需要的资源
  */
 Building.prototype.getUpgradeCost = function() {
-    buildingConf = global.csv.building.get(this.data.id, this.data.level+1);
-    if( !buildingConf ) {
+    var buildingLevelConf = global.csv.building.get(this.data.id, this.data.level+1);
+    if( !buildingLevelConf ) {
         alert("已经达到最大等级");
         return;
     }
 
-    return {resource:this.buildingBaseConf.BuildResource, num:buildingConf.BuildCost};
+    return {resource:this.buildingBaseConf.BuildResource, num:buildingLevelConf.BuildCost};
 };
 
 /* 升级
@@ -248,22 +248,24 @@ Building.prototype.getUpgradeCost = function() {
 Building.prototype.upgrade = function() {
     if( this.buildingClass == "Obstacle" ) return;
 
-    if( this.data.state == BuildingState.UPGRADE || this.data.state == BuildingState.TRAIN) return;
+    if( this.data.state == BuildingState.UPGRADE ) return;
     if( !global.model.canWork() ) return;
 
     var upgradeCost = this.getUpgradeCost();
     if( !upgradeCost ) return;
 
-    if( !global.model.updateHud(upgradeCost.resource, -upgradeCost.num) ) {
-        return;
-    }
-    if( this.data.id != "town_hall" && buildingConf.TownHallLevel > global.model.base.townhall ){
+    var buildingLevelConf = global.csv.building.get(this.data.id, this.data.level+1);
+    if( this.data.id != "town_hall" && buildingLevelConf.TownHallLevel > global.model.buildingMaxLevel.townhall ){
         alert("主建筑等级不够");
         return;
     }
 
+    if( !global.model.updateHud(upgradeCost.resource, -upgradeCost.num) ) {
+        return;
+    }
+
     var now = Math.round(+new Date() / 1000);
-    this.data.timer = now + buildingConf.BuildTime * 60;
+    this.data.timer = now + buildingLevelConf.BuildTime * 60;
     this.data.state = BuildingState.UPGRADE;
 
     global.model.updateHud("working", 1);
@@ -282,18 +284,15 @@ Building.prototype.upgraded = function() {
     this.data.level += 1;
     this.data.state = BuildingState.NORMAL;
     
-    var buildingConf = global.csv.building.get(this.data.id, 1);
-    if( buildingConf.ProducesResource != "" ) {
+    if( this.buildingBaseConf.BuildingClass == "Resource" ) {
         this.data.state = BuildingState.PRODUCE;
         this.data.timer = now;
-    }
-
-    if( this.data.id == "town_hall" ) {
-        global.model.base.townhall = this.data.level;
+    }else if( this.buildingBaseConf.BuildingClass == "Army" ) {
+        this.training();
     }
 
     global.model.updateHud("working", -1);
-    global.model.updateResourceLimit();
+    global.model.updateBuildingStatistic();
 
     this.update();
 };
@@ -310,6 +309,22 @@ Building.prototype.accelerate = function() {
     }else if( this.data.state == BuildingState.RESEARCH ) {
         if( !global.model.updateHud("cash", -5) ) return;
         this.researched();    
+    }else if( this.data.state == BuildingState.TRAIN ) {
+        if( !global.model.updateHud("cash", -5) ) return;
+
+        var task = this.data.task;
+        for( var i=0; i<task.length; i++ ) {
+            var character = task[i][0];
+            var num = task[i][1];
+            if( !global.model.troops[character] ) {
+                global.model.troops[character] = num;
+            }else {
+                global.model.troops[character] += num;
+            }
+        }
+
+        this.data.state = BuildingState.NORMAL;
+        this.data.task = [];
     }
 };
 
@@ -352,13 +367,13 @@ Building.prototype.update = function() {
     }else {
         // 0级建造的时候使用1级素材
         var level = this.data.level > 0 ? this.data.level : 1;
-        var buildingConf = global.csv.building.get(this.data.id, level);
+        var buildingLevelConf = global.csv.building.get(this.data.id, level);
 
-        if( !buildingConf ) {
+        if( !buildingLevelConf ) {
             return;
         }
 
-        var buildingPic = resourceManager.get("image/" + this.data.id + "_" + buildingConf.Asset + ".png");
+        var buildingPic = resourceManager.get("image/" + this.data.id + "_" + buildingLevelConf.Asset + ".png");
         this.mc.addChild( new Texture(buildingPic, 0, 0, buildingPic.width, buildingPic.height, 
                         -Math.round(buildingPic.width/2), -Math.round(buildingPic.height+offset), buildingPic.width, buildingPic.height));
         
@@ -415,13 +430,13 @@ Building.prototype.onTick = function() {
 Building.prototype.harvest = function() {
     if( this.data.state != BuildingState.PRODUCE ) return;
 
-    var buildingConf = global.csv.building.get(this.data.id, this.data.level);
+    var buildingLevelConf = global.csv.building.get(this.data.id, this.data.level);
     
     var now = Math.round(+new Date() / 1000);
     var produceSeconds = now - this.data.timer;
-    var output = Math.round(buildingConf.ResourcePerHour * produceSeconds / 3600);
-    if( output > buildingConf.ResourceMax ) {
-        output = +buildingConf.ResourceMax;
+    var output = Math.round(buildingLevelConf.ResourcePerHour * produceSeconds / 3600);
+    if( output > buildingLevelConf.ResourceMax ) {
+        output = +buildingLevelConf.ResourceMax;
     }
 
     if( !global.model.updateHud(this.buildingBaseConf.ProducesResource, output) ) return;
@@ -470,23 +485,23 @@ Building.prototype.research = function(character) {
 
     var level = global.model.laboratory[character];
     if( !level ) {
-        global.model.laboratory[character] = 0;
-        level = 0;
+        global.model.laboratory[character] = 1;
+        level = 1;
     }
 
-    var characterConf = global.csv.character.get(character, level + 1);
-    if( !characterConf ) {
+    var characterLevelConf = global.csv.character.get(character, level + 1);
+    if( !characterLevelConf ) {
         alert("无法升级,以及达到顶级");
         return;
     }
 
     var characterBaseConf = global.csv.character.get(character, 1);
-    if( !global.model.updateHud(characterBaseConf.UpgradeResource, -characterConf.UpgradeCost) ) {
+    if( !global.model.updateHud(characterBaseConf.UpgradeResource, -characterLevelConf.UpgradeCost) ) {
         return;
     }
 
     this.data.state = BuildingState.RESEARCH;
-    this.data.timer = now + characterConf.UpgradeTimeH * 3600;
+    this.data.timer = now + characterLevelConf.UpgradeTimeH * 3600;
     this.data.research = character;
 };
 
@@ -497,4 +512,101 @@ Building.prototype.researched = function() {
     global.model.laboratory[this.data.research] += 1;
     this.data.state = BuildingState.NORMAL;
     this.data.timer = 0;
+};
+
+Building.prototype.train = function(character, num) {
+    if( this.data.state == BuildingState.UPGRADE ) return;
+    if( Math.abs(num) > 1 ) return;
+
+    var task = this.data.task;
+    var taskIndex = -1;
+    for( var i=0; i<task.length; i++ ) {
+        if( task[i][0] == character ) {
+            taskIndex = i;
+            break;
+        }
+    }
+    
+    // 没有可以取消的训练
+    if( taskIndex < 0 && num < 0 ) return;
+
+    // 判断当前建筑训练限制
+    if( num > 0 ) {
+        var buildingLevelConf = global.csv.building.get(this.data.id, this.data.level);
+        if( 0 >= buildingLevelConf.UnitProduction ) return;
+    }
+
+    var characterBaseConf = global.csv.character.get(character, 1);
+    var characterLevel = global.model.laboratory[character];
+    var characterLevelConf = global.csv.character.get(character, characterLevel);
+
+    if( !global.model.updateHud(characterBaseConf.TrainingResource, -characterLevelConf.TrainingCost*num) ) return;
+    
+    if( taskIndex < 0 ) {
+        task.push([character, num]);
+    }else {
+        task[taskIndex][1] += num;
+        if( task[taskIndex][1] == 0 ) {
+            task.splice(taskIndex, 1);
+            if( this.data.state == BuildingState.TRAIN && this.data.train == character ) {
+                // 取消正在训练的,且没有更多可以训练的
+                this.data.state = BuildingState.NORMAL;
+            }
+        }
+    }
+
+    this.training();
+};
+
+Building.prototype.training = function(character) {
+    if( this.data.state == BuildingState.TRAIN ) return;
+
+    if( this.data.task.length == 0 ) {
+        this.data.state = BuildingState.NORMAL;
+        this.data.timer = 0;
+    }else {
+        var character = this.data.task[0][0];
+        var level = global.model.laboratory[character] ? global.model.laboratory[character] : 1;
+        var characterLevelConf = global.csv.character.get(character, level);
+
+        var now = Math.round(+new Date() / 1000);
+        this.data.state = BuildingState.TRAIN;
+        this.data.timer = now + characterLevelConf.TrainingTime;
+        this.data.train = character;
+    }
+};
+
+Building.prototype.trained = function() {
+    if( global.model.houseSpace >= global.model.base.troopmax ) {
+        trace("没有更多的人口空间");
+        return;
+    }
+
+    var character = this.data.train;
+    var emptyIndex = -1;
+    var task = this.data.task;
+    for( var i=0; i<task.length; i++ ) {
+        if( task[i][0] == character ) {
+            task[i][1] -= 1;
+            if( task[i][1] == 0 ) {
+                emptyIndex = i;
+            }
+            break;
+        }
+    }
+
+    if( emptyIndex >= 0 ) {
+        task.splice(emptyIndex, 1);
+    }
+
+    var characterBaseConf = global.csv.character.get(character, 1);
+    global.model.houseSpace += characterBaseConf.HousingSpace;
+    if( !global.model.troops[character] ) {
+        global.model.troops[character] = 1;
+    }else {
+        global.model.troops[character] += 1;
+    }
+
+    this.data.state = BuildingState.NORMAL;
+    this.training();
 };

@@ -26,11 +26,14 @@ function CSVRowToObject(column, columnType, cols) {
 }
 
 function BuildingCSV(rawData) {
-    this.data = [];
+    this.data = {};
     this.column = [];
     this.columnType = [];
 
     var rows = rawData.split("\n");
+    var id = null;
+    var level = null;
+
     for( var i=0; i<rows.length; i++ ) {
         var cols = rows[i].split(",");
         if( i == 0 ) {
@@ -47,32 +50,20 @@ function BuildingCSV(rawData) {
             continue;
         }
         if( cols.length != this.column.length ) continue;
-
-        this.data.push(cols); 
+        
+        var newId = cols[0].trim();
+        if( newId != "" && id != newId ) {
+            id = newId;
+            this.data[id] = {};
+        }
+        this.data[id][cols[3]] = cols;
     }
 }
 
 BuildingCSV.prototype.get = function(id, level) {
-    var bFinding = false;
+    if( !(id in this.data) || !(level in this.data[id]) ) return null;
 
-    for( var i=0,max=this.data.length; i<max; i++ ) {
-        var cols = this.data[i];
-        if( cols[0] == id ) {
-            bFinding = true;
-        }
-
-        if( cols[0] != "" && cols[0] != id && bFinding ) {
-            bFinding = false;
-        }
-
-        if( bFinding ) {
-            if( cols[3] == level ) {
-                return CSVRowToObject(this.column, this.columnType, cols);
-            }
-        }
-    }
-
-    return null;
+    return CSVRowToObject(this.column, this.columnType, this.data[id][level]);
 };
 
 function LevelCSV(rawData) {
@@ -189,11 +180,14 @@ function GlobalCSV(rawData) {
 }
 
 function CharacterCSV(rawData) {
-    this.data = [];
+    this.data = {};
     this.column = [];
     this.columnType = [];
 
     var rows = rawData.split("\n");
+    var id = null;
+    var level = 1;
+
     for( var i=0; i<rows.length; i++ ) {
         var cols = rows[i].split(",");
         if( i == 0 ) {
@@ -209,46 +203,29 @@ function CharacterCSV(rawData) {
         }
         if( cols.length != this.column.length ) continue;
 
-        this.data.push(cols); 
+        var newId = cols[0].trim();
+        if( newId != "" && id != newId ) {
+            id = newId;
+            level = 1;
+            this.data[id] = {};
+        }
+        this.data[id][level] = cols;
+        level += 1;
     }
 }
 
 CharacterCSV.prototype.get = function(id, level) {
-    var bFinding = false;
-    var myLevel = 0;
+    if( !(id in this.data) || !(level in this.data[id]) ) return null;
 
-    for( var i=0,max=this.data.length; i<max; i++ ) {
-        var cols = this.data[i];
-        if( cols[0] == id ) {
-            //开始查找
-            bFinding = true;
-            myLevel = 1;
-        }
-
-        if( cols[0] != "" && cols[0] != id && bFinding ) {
-            //结束查找
-            return null;
-        }
-
-        if( bFinding ) {
-            if( myLevel == level ) {
-                return CSVRowToObject(this.column, this.columnType, cols);
-            }
-
-            myLevel += 1;
-        }
-    }
-
-    return null;
+    return CSVRowToObject(this.column, this.columnType, this.data[id][level]);
 };
 
-CharacterCSV.prototype.getByClass = function(characterClass) {
+CharacterCSV.prototype.getByBuilding = function(buildingId) {
     var result = [];
-
-    for( var i=0,max=this.data.length; i<max; i++ ) {
-        var cols = this.data[i];
-        if( cols[2] == characterClass ) {
-            result.push(CSVRowToObject(this.column, this.columnType, cols));
+    
+    for( var id in this.data ) {
+        if( this.data[id][1][2] == buildingId ) {
+            result.push(CSVRowToObject(this.column, this.columnType, this.data[id][1]));
         }
     }
 

@@ -72,8 +72,7 @@ function prepareUI() {
     var left = new MovieClip("left");
     left.y = 50;
 
-    var buttons = [ ["nothing","无功能"],   ["accelerate","加速"],
-                    ["upgrade","升级建筑"], ["harvest","收取资源"],
+    var buttons = [ ["nothing","无功能"],
                     ["c_gold_mine","建造金矿"],  ["c_elixir_pump","建造油井"],
                     ["c_gold_storage","建造金库"],  ["c_elixir_storage","建造油库"],
                     ["c_barrack","建造兵营"],["c_troop_housing","建造传送门"],
@@ -160,12 +159,13 @@ function prepareMap() {
             
             if( buildingId == "barrack" || buildingId == "machine" || buildingId == "shipyard" ) {
                 data.task = [];
+                data.train = "";
             }else if( buildingId == "laboratory" ) {
                 data.research = "";
             }
 
             
-            var maxBuild = global.csv.townhall.get(global.model.base.townhall)[buildingConf.Name];
+            var maxBuild = global.csv.townhall.get(global.model.buildingMaxLevel.town_hall)[buildingConf.Name];
             if( global.model.buildingCount[data.id] >= maxBuild ) {
                 alert("超出该建筑建造限制:"+maxBuild);
                 return;
@@ -200,7 +200,6 @@ function initGame() {
 
     global.map = new LogicMap(global.Map.unitW, global.Map.unitH);
 
-    global.model.updateResourceLimit();
     global.model.updateHud("xp", 0);
     global.model.updateHud("gold", 0);
     global.model.updateHud("elixir", 0);
@@ -255,19 +254,19 @@ function initGame() {
     var machines = {};
     var airs = {};
 
-    var groundConfs = global.csv.character.getByClass("Ground");
+    var groundConfs = global.csv.character.getByBuilding("barrack");
     for(var i=0; i<groundConfs.length; i++ ) {
         var obj = groundConfs[i];
         all[obj.ID] = obj.Name;
         grounds[obj.ID] = obj.Name;
     }
-    var machineConfs = global.csv.character.getByClass("Machine");
+    var machineConfs = global.csv.character.getByBuilding("machine");
     for(var i=0; i<machineConfs.length; i++ ) {
         var obj = machineConfs[i];
         all[obj.ID] = obj.Name;
         machines[obj.ID] = obj.Name;
     }
-    var airConfs = global.csv.character.getByClass("Air");
+    var airConfs = global.csv.character.getByBuilding("shipyard");
     for(var i=0; i<airConfs.length; i++ ) {
         var obj = airConfs[i];
         all[obj.ID] = obj.Name;

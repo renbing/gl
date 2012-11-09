@@ -22,7 +22,7 @@ User.base = {
     working     : 0,
     elixirmax   : 25000000,
     goldmax     : 25000000,
-    townhall    : 0,
+    troopmax    : 0,
 };
 
 User.map = {
@@ -32,10 +32,10 @@ User.map = {
     1820 : {id:'gold_storage',  level:1,    state:0,    timer:0},
     1020 : {id:'elixir_storage',level:1,    state:0,    timer:0},
     3025 : {id:'troop_housing', level:1,    state:0,    timer:0},
-    1830 : {id:'barrack',       level:1,    state:0,    timer:0,    task:[]},
-    3040 : {id:'machine',       level:1,    state:0,    timer:0,    task:[]},
+    1830 : {id:'barrack',       level:1,    state:0,    timer:0,    task:[],    train:""},
+    3040 : {id:'machine',       level:1,    state:0,    timer:0,    task:[],    train:""},
+    1040 : {id:'shipyard',      level:1,    state:0,    timer:0,    task:[],    train:""},
     2040 : {id:'laboratory',    level:1,    state:0,    timer:0,    research:""},
-    1040 : {id:'shipyard',      level:1,    state:0,    timer:0},
     4000 : {id:'crashship_1',   state:0},
     4010 : {id:'crater_1',      state:0},
     4020 : {id:'plant_1',       state:0},
@@ -65,19 +65,13 @@ function Model(data) {
     this.mission = data.mission;
     
     this.buildingCount = {};// 地图上的建筑物分类统计
+    this.buildingMaxLevel = {}; // 地图上建筑最大等级
     this.world = {};        // 地图上所有的building对象
-
-    for( var corner in this.map ) {
-        var building = this.map[corner];
-        if( !this.buildingCount[building.id] ) {
-            this.buildingCount[building.id] = 1;
-        }else {
-            this.buildingCount[building.id] += 1;
-        }
-
-        if( building.id == "town_hall" ) {
-            this.base.townhall = building.level;
-        }
+    this.houseSpace = 0;
+    
+    for( var id in this.troops ) {
+        var characterBaseConf = global.csv.character.get(id, 1);
+        this.houseSpace += this.troops[id] * characterBaseConf.HousingSpace;
     }
 }
 
@@ -86,13 +80,8 @@ Model.prototype.worldAdd = function(building) {
     
     this.world[corner] = building;
     this.map[corner] = building.data;
-        
-    var id = building.data.id;
-    if( !this.buildingCount[id] ) {
-        this.buildingCount[id] = 1;
-    }else{
-        this.buildingCount[id] += 1;
-    }
+    
+    this.updateBuildingStatistic();
 }
 
 Model.prototype.worldRemove = function(building) {
@@ -101,10 +90,7 @@ Model.prototype.worldRemove = function(building) {
     delete this.world[corner];
     delete this.map[corner];
 
-    var id = building.data.id;
-    if( this.buildingCount[id] && this.buildingCount[id] > 0 ) {
-        this.buildingCount[id] -= 1;
-    }
+    this.updateBuildingStatistic();
 }
 
 Model.prototype.updateHud = function(name, value) {
@@ -154,20 +140,40 @@ Model.prototype.updateHud = function(name, value) {
     return true;
 };
 
-Model.prototype.updateResourceLimit = function() {
+Model.prototype.updateBuildingStatistic = function() {
     var goldMax = 0;
     var elixirMax = 0;
+    var troopMax = 0;
+    
+    this.buildingCount = {};
+    this.buildingMaxLevel = {};
 
-    for( var corner in this.map ) {
-        var building = this.map[corner];
-        var buildingConf = global.csv.building.get(building.id, building.level);
-        if( !buildingConf ) continue;
+    for( var corner in this.world ) {
+        var building = this.world[corner];
+        if( building.buildingClass == "Obstacle" ) continue;
+
+        var id = building.data.id;
+        var level = building.data.level;
+        if( level <= 0 ) continue;
+
+        var buildingConf = global.csv.building.get(id, level);
         goldMax += buildingConf.MaxStoredGold;
         elixirMax += buildingConf.MaxStoredElixir;
+        troopMax += buildingConf.MaxStoredTroop;
+
+        if( !this.buildingCount[id] ) {
+            this.buildingCount[id] = 0;
+        }
+        this.buildingCount[id] = 0;
+
+        if( !this.buildingMaxLevel[id] || this.buildingMaxLevel[id] < level ) {
+            this.buildingMaxLevel[id] = level;
+        }
     }
 
     //this.base.goldmax = goldMax;
     //this.base.elixirmax = elixirMax;
+    this.base.troopmax = troopMax;
 
     this.updateHud("gold", 0);
     this.updateHud("elixir", 0);
