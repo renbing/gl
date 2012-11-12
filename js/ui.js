@@ -1,11 +1,3 @@
-/**
- * Created by renbing
- * User: renbing
- * Date: 12-11-06
- * Time: 上午11:28
- *
- */
-
 var UI = {};
 UI.Window = function() {
     this.mc = new MovieClip("window");

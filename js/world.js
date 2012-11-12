@@ -1,12 +1,4 @@
 /**
- * Created by renbing
- * User: renbing
- * Date: 12-10-30
- * Time: 下午2:47
- *
- */
-
-/**
  * 地图
  */
 

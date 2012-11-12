@@ -35,6 +35,13 @@ global.Color = {
     PINK : "#ff00ff"
 };
 
+global.Animations = {
+    "marine" : {"jump": [11, [-27,-38]],
+                "running" : [96, [-26.4,-32.6]],
+                "shooting" : [24, [-37,-47]]
+                },
+};
+
 global.Assets = [
 
 // 配置文件

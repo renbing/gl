@@ -32,6 +32,16 @@ function loadLoading() {
         }
     }
 
+    for( var id in global.Animations ) {
+        var clip = global.Animations[id];
+        for(var action in clip ) {
+            var frames = clip[action][0];
+            for( var i=1; i<=frames; i++ ) {
+                resourceManager.add("animations/" + id + "/" + action + "/" + action + "_" + i + ".png", "image");
+            }
+        }
+    }
+
     resourceManager.load(start);
 }
 
