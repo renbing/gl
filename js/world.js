@@ -136,15 +136,22 @@ Building.prototype.onDragEnd = function(e) {
     this.dy = 0;
 
     global.map.clearRect(this.sux, this.suy, this.size, this.size);
+    global.graph.update(this.sux, this.suy, this.size, this.size, GraphNodeType.OPEN);
     if( global.map.testRect(this.ux, this.uy, this.size, this.size) ) {
         this.ux = this.sux;
         this.uy = this.suy;
+
     }else{
+        var oldCorner = this.sux * 100 + this.suy;
+
         this.sux = this.ux;
         this.suy = this.uy;
+
+        global.model.worldUpdate(oldCorner, this);
     }
 
     global.map.addRect(this.ux, this.uy, this.size, this.size);
+    global.graph.update(this.ux, this.uy, this.size, this.size, GraphNodeType.WALL);
     this.updatePosition();
 };
 
@@ -195,7 +202,7 @@ Building.prototype.onClick = function(e) {
 /* 更新位置显示
  */
 Building.prototype.updatePosition = function(){
-    this.mc.x = global.Map.startX + (this.ux+this.uy)*global.Map.cellUnitX;
+    this.mc.x = global.Map.startX + (this.ux+this.uy+this.size)*global.Map.cellUnitX;
     this.mc.y = global.Map.startY + (-this.ux+this.uy)*global.Map.cellUnitY;
 
     this.adjustDepth();

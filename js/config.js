@@ -20,7 +20,7 @@ global.Map = {
     cellUnitX : 16,
     cellUnitY : 8,
     cellUnit : 8,
-    startX : 286+117,
+    startX : 286+17,
     startY : 1342-150,
 };
 

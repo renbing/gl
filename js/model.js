@@ -93,6 +93,16 @@ Model.prototype.worldRemove = function(building) {
     this.updateBuildingStatistic();
 }
 
+Model.prototype.worldUpdate = function(oldCorner, building) {
+    var corner = building.ux * 100 + building.uy;
+
+    delete this.world[oldCorner];
+    delete this.map[oldCorner];
+
+    this.world[corner] = building;
+    this.map[corner] = building.data;
+}
+
 Model.prototype.updateHud = function(name, value) {
     var hud = global.stage.getChildByName("ui").getChildByName("hud");
     name = name.toLowerCase();

@@ -89,7 +89,7 @@ function prepareUI() {
                     ["c_laboratory","建造实验室"],["c_cannon","建造加能炮"],
                     ["c_archer_tower","建造激光塔"],["c_wall","建造围墙"],
                     ["c_wizard_tower","建造重炮塔"],["c_air_defense","建造防空导弹"],
-                    ["c_mortar","建造核弹塔"],
+                    ["c_mortar","建造核弹塔"], ["marine", "放一个测试兵"],
                 ];
     
     for(var i=0; i<buttons.length; i++) {
@@ -154,13 +154,25 @@ function prepareMap() {
     map.addChild(world);
 
     map.addEventListener(Event.MOUSE_CLICK, function(e) {
+        var dx = e.data.x - this.x - global.Map.startX;
+        var dy = e.data.y - this.y - global.Map.startY;
+
+        var fdux = (dx - 2 * dy) / 4 / global.Map.cellUnit;
+        var fduy = (dx + 2 * dy) / 4 / global.Map.cellUnit;
+
+        var dux = (fdux > 0 ? 1:-1) * Math.floor(Math.abs(fdux));
+        var duy = (fduy > 0 ? 1:-1) * Math.floor(Math.abs(fduy));
+        if( dux < 0 || duy < 0 ) {
+            return;
+        }
+        var corner = dux * 100 + duy;
+
         if( global.control.mode.substr(0,2) == "c_" ) {
             if( !global.model.canWork() ) return;
             
             var buildingId = global.control.mode.substr(2, global.control.mode.length-2);
             var buildingConf = global.csv.building.get(buildingId, 1);
 
-            var corner = 0;
             var data = new Object();
             data.id = buildingId;
             data.level = 0;
@@ -192,6 +204,25 @@ function prepareMap() {
                 building.updatePosition();
                 global.model.worldAdd(building);
                 global.map.addRect(building.ux, building.uy, building.size, building.size);
+                global.graph.update(building.ux, building.uy, building.size, building.size, GraphNodeType.WALL);
+            }
+        }else if( global.control.mode == "marine" ) {
+            global.soldier.mc.x = e.data.x - this.x - 25; 
+            global.soldier.mc.y = e.data.y - this.y - 25;
+            global.soldier.corner = corner;
+            global.soldier.mc.visible = true;
+        }else if( global.control.mode == "nothing" ) {
+            var sux = Math.floor(global.soldier.corner / 100);
+            var suy = global.soldier.corner % 100;
+
+            var path = astar.search(global.graph.nodes, global.graph.nodes[sux][suy], global.graph.nodes[dux][duy]);
+            if( path.length > 0 ) {
+                global.soldierLine.line = [global.soldier.corner];
+                global.soldierLine.pos = 0;
+                for( var i=0; i<path.length; i++ ) {
+                    global.soldierLine.line.push(path[i].pos.x * 100 + path[i].pos.y);
+                }
+                global.soldierLine.moved = null;
             }
         }
     });
@@ -209,6 +240,12 @@ function initGame() {
     global.control.mode = "nothing";
 
     global.map = new LogicMap(global.Map.unitW, global.Map.unitH);
+    global.graph = new Graph(global.Map.unitW, global.Map.unitH);
+    global.soldier = {mc : (new SoldierAnimation("marine")).animations.running_0, corner: 0};
+    global.soldierLine = {line:[], pos:0};
+
+
+    global.stage.getChildByName("map").addChild(global.soldier.mc);
 
     global.model.updateHud("xp", 0);
     global.model.updateHud("gold", 0);
@@ -228,6 +265,7 @@ function initGame() {
         
         global.model.worldAdd(building);
         global.map.addRect(building.ux, building.uy, building.size, building.size);
+        global.graph.update(building.ux, building.uy, building.size, building.size, GraphNodeType.WALL);
     }
     
     // world地图更新
@@ -289,6 +327,49 @@ function initGame() {
         shipyard : new UI.CharacterWindow(airs, "train"),
         laboratory : new UI.CharacterWindow(all, "research"),
     };
+
+    global.stage.addEventListener(Event.ENTER_FRAME, function(e) {
+        if( global.soldierLine.line.length <= 0 ) return;
+        
+        if( !global.soldierLine.moved || global.soldierLine.moved >= 10 ) {
+            if( global.soldierLine.moved ) {
+                global.soldierLine.pos += 1;
+            }
+
+            global.soldier.corner = global.soldierLine.line[global.soldierLine.pos];
+
+            if( global.soldierLine.pos >= global.soldierLine.line.length-1 ) {
+                global.soldierLine.line = [];
+                return;
+            }
+
+            var sCorner = global.soldierLine.line[global.soldierLine.pos];
+            var dCorner = global.soldierLine.line[global.soldierLine.pos+1];
+
+            var dux = Math.floor(dCorner/100) - Math.floor(sCorner/100);
+            var duy = dCorner%100 - sCorner%100;
+            
+            var directionX = 0;
+            var directionY = 0;
+
+            if( dux != 0 ) {
+                directionX = dux/Math.abs(dux);
+                directionY = -dux/Math.abs(dux);
+            }else {
+                directionX = duy/Math.abs(duy);
+                directionY = duy/Math.abs(duy);
+            }
+
+            global.soldierLine.moved = 0;
+            global.soldierLine.direction = {x:directionX, y:directionY};
+        }
+
+        global.soldierLine.moved += 1;
+
+        global.soldier.mc.x += 1/10 * global.soldierLine.direction.x * global.Map.cellUnitX;
+        global.soldier.mc.y += 1/10 * global.soldierLine.direction.y * global.Map.cellUnitY;
+        
+    });
 }
 
 function initConf() {
