@@ -14,21 +14,42 @@ typedef enum {
     MOUSE_UP = 3
 }EventType;
 
-class Event
+typedef struct
+{
+    EventType type;
+    void *data;
+}Event;
+
+class EventCallback
 {
     public:
-        EventType type;
+        virtual void call(const MovieClip *obj, const Event *e) = 0;
+        virtual ~EventCallback(){}
 };
 
+class JSEventCallback : public EventCallback
+{
+    public:
+        JSObjectRef callback;
+
+    public:
+        JSEventCallback(JSObjectRef callback) callback(callback){}
+        virtual void call(const MovieClip *obj, const Event *e);
+
+        bool operator==(const JSEventCallback &target) {
+            return callback == target.callback;            
+        }
+}
+
+void JSEventCallback::call(const MovieClip *obj, const Event *e) {
+}
 
 class DisplayObject
 {
     public:
         virtual void render() = 0;
-        virtual ~DisplayObject() = 0;
+        virtual ~DisplayObject(){};
 };
-
-inline DisplayObject::~DisplayObject(){}
 
 class Texture : public DisplayObject
 {
@@ -375,19 +396,31 @@ void MovieClip::addEventListener(EventType type, EventCallback *callbak) {
 void MovieClip::removeEventListener(EventType type, EventCallback *callbak) {
     if( eventBubbleCallBack.find(type) == eventBubbleCallBack.end() ) return;
 
+    vector<EventCallback *> &callbacks = eventBubbleCallBack[type];
     if( callback ) {
-        vector<EventCallback *> &callbacks = eventBubbleCallBack[type];
-        vector<EventCallback *>::iterator it = find(callbacks.begin(), callbacks.end(), callback);
-        if( it != callbacks.end() ) {
-            callbacks.erase(it);
+        for(vector<EventCallback *>::iterator it=callbacks.begin(); it!=callbacks.end(); it++) {
+            if( *(*it) == *callack ) {
+                delete *it;
+                callback.erase(it);
+            }
         }
     }else {
+        for(vector<EventCallback *>::iterator it=callbacks.begin(); it!=callbacks.end(); it++) {
+            delete *it;
+        }
         eventBubbleCallBack[type].clear();
     }
 }
 
 void MovieClip::removeAllEventListener() {
-    eventBubbleCallBack.clear();
+    map<EventType, vector<EventCallback*> >::iterator it=eventBubbleCallBack.begin();
+    for(; it!=eventBubbleCallBack.end(); it++) {
+        vector<EventCallback *> &callbacks = it->second;
+        for(vector<EventCallback *>::iterator it=callbacks.begin(); it!=callbacks.end(); it++) {
+            delete *it;
+        }
+        callbacks.clear();
+    }
 }
 
 DisplayObject * hitTest(float x, float y, bool useAlphaTest);
@@ -410,7 +443,7 @@ void MovieClip::triggerEvent(const Event *e);
     if( eventBubbleCallBack.find(e->type) != eventBubbleCallBack.end() ) {
         vector<EventCallback *> &callbacks = eventBubbleCallBack[e->type];
         for( int i=0,max=callbacks.size(); i<max; i++ ) {
-            callbacks[i](this);
+            callbacks[i](this, e);
         }
     }
     // 主动停止冒泡
@@ -440,7 +473,7 @@ void MovieClip::render() {
     if( eventBubbleCallBack.find(Event.ENTER_FRAME) != eventBubbleCallBack.end()) {
         vector<EventCallback *> &callbacks = eventBubbleCallBack[Event.ENTER_FRAME];
         for( int i=0,max=callbacks.size(); i<max; i++ ) {
-            callbacks[i](this);
+            callbacks[i](this, e);
         }
     }
         
