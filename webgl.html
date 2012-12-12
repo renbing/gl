@@ -27,30 +27,62 @@
             vColor = aVertexColor;
         }
     </script>
+
+    <script id="shader-tfs" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec2 vTextureCoord;
+
+        uniform sampler2D uSampler;
+
+        void main(void) {
+            gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+        }
+    </script>
+
+    <script id="shader-tvs" type="x-shader/x-vertex">
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+
+        varying vec2 vTextureCoord;
+
+        void main(void) {
+            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+            vTextureCoord = aTextureCoord;
+        }
+    </script>
         
     <script type="text/javascript">
         var trace = console.log;
         var gl, canvas;
         var shaderProgram;
-        var mvMatrix, pMatrix;
-        var triangleVertexPositionBuffer, squareVertexPositionBuffer;
+        var mvMatrix = new Matrix4x4();
+        var pMatrix = new Matrix4x4();
+        var triangleVertexPositionBuffer, squareVertexPositionBuffer, squareVertexTextureCoordBuffer;
         var triangleVertexColorBuffer, squareVertexColorBuffer;
+        var matrixStack = new Matrix4x4Stack();
+        var frameCount = 0;
+        var globalTexture = 0;
 
         function webGLStart() {
             canvas = document.getElementById("gl-canvas");
             initGL(canvas);
-            initShaders();
+            //initShaders();
+            initTextureShaders();
             initBuffers();
 
-            pMatrix = new Matrix4x4();
+            globalTexture = createTexture("cubetexture.png");
+
             pMatrix.ortho(0, gl.viewportWidth, 0, gl.viewportHeight, -1, 1);
             //pMatrix.perspective(60, gl.viewportWidth/gl.viewportHeight, 0.1, 100.0);
             gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             gl.enable(gl.DEPTH_TEST);
-
-            drawScene();
+            //setInterval(drawScene, 1000/60);
+            setInterval(drawTextureScene, 1000/60);
         }
 
         function initGL(canvas) {
@@ -128,6 +160,32 @@
             shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
         }
 
+        function initTextureShaders() {
+            var fragmentShader = getShader("shader-tfs");
+            var vertexShader = getShader("shader-tvs");
+
+            shaderProgram = gl.createProgram();
+            gl.attachShader(shaderProgram, vertexShader);
+            gl.attachShader(shaderProgram, fragmentShader);
+            gl.linkProgram(shaderProgram);
+
+            if( !gl.getProgramParameter(shaderProgram, gl.LINK_STATUS) ) {
+                trace("link program fail");
+                return;
+            }
+
+            gl.useProgram(shaderProgram);
+
+            shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+            gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+            shaderProgram.textureCoordAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord");
+            gl.enableVertexAttribArray(shaderProgram.textureCoordAttribute);
+
+            shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+            shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+            shaderProgram.sampleUniform = gl.getUniformLocation(shaderProgram, "uSampler");
+        }
+
         function setMatrixUniforms() {
             gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix.elements);
             gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix.elements);
@@ -161,10 +219,10 @@
             squareVertexPositionBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
             vertices = [
-                0, 100, 0,
+                -100, 100, 0,
                 100, 100, 0, 
-                0, 0, 0,
-                100, 0, 0
+                -100, -100, 0,
+                100, -100, 0
             ];
 
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
@@ -183,13 +241,48 @@
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
             squareVertexColorBuffer.itemSize = 4;
             squareVertexColorBuffer.numItems = 4;
+
+            squareVertexTextureCoordBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexTextureCoordBuffer);
+            var textureCoords = [
+                0.0, 1.0,
+                1.0, 1.0,
+                0.0, 0.0,
+                1.0, 0.0,
+            ];
+
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+            squareVertexTextureCoordBuffer.itemSize = 2;
+            squareVertexTextureCoordBuffer.numItems = 4;
+        }
+
+        function createTexture(path) {
+            var texture = gl.createTexture();
+            texture.image = new Image();
+            texture.image.onload = function() {
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                console.log(texture);
+            };
+            texture.image.src = path;
+            
+            return texture;
         }
 
         function drawScene() {
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            frameCount += 1;
+            if( frameCount >= 360 ) {
+                frameCount = 0;
+            }
 
-            mvMatrix = new Matrix4x4();
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            
+            mvMatrix.loadIdentity();
             mvMatrix.translate(100.0, 100.0, 0);
+            mvMatrix.rotate(frameCount, 0.0, 0.0, 1.0);
 
             gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
             gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, triangleVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -199,12 +292,32 @@
             setMatrixUniforms();
             gl.drawArrays(gl.TRIANGLES, 0, triangleVertexPositionBuffer.numItems);
 
-            mvMatrix = new Matrix4x4();
+            mvMatrix.loadIdentity();
             mvMatrix.translate(400.0, 200.0, 0);
+            mvMatrix.rotate(frameCount, 0.0, 0.0, 1.0);
             gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
             gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
             gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexColorBuffer);
             gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, squareVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+            setMatrixUniforms();
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
+        }
+
+        function drawTextureScene() {
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            mvMatrix.loadIdentity();
+            mvMatrix.translate(400.0, 200.0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
+            gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+            gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexTextureCoordBuffer);
+            gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, squareVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, globalTexture);
+            gl.uniform1i(shaderProgram.sampleUniform, 0);
+
             setMatrixUniforms();
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
         }
